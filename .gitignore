@@ -1,0 +1,22 @@
+# raw / intermediate data
+data/raw/
+data/transcripts/
+data/diarized/
+*.wav
+*.mp4
+
+# model checkpoints
+checkpoints/
+
+# secrets
+.env
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# os
+.DS_Store
