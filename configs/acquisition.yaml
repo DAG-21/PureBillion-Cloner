@@ -1,2 +1,33 @@
-# Configuration for src/acquisition/
-# TODO: define stage-specific parameters
+# Configuration for src/acquisition/ (Phase 1: Data Collection)
+#
+# All relative paths are resolved against the project root
+# (the directory containing this configs/ folder).
+
+output:
+  videos_dir: data/raw/videos
+  metadata_dir: data/raw/metadata
+  history_file: data/raw/download_history.csv
+
+download:
+  quality: "1080"            # max video height passed to the yt-dlp format selector
+  format: mp4                 # container format videos are merged into
+  audio_only: false
+  rate_limit: null            # e.g. "5M" to cap bandwidth at 5 MB/s; null = unlimited
+  concurrent_fragments: 4
+
+retry:
+  max_retries: 3
+  retry_delay_seconds: 5
+  backoff_factor: 2.0         # exponential backoff multiplier between retries
+
+network:
+  socket_timeout: 30
+  cookies_file: null          # path to a cookies.txt, for age-restricted/private videos
+
+playlist:
+  ignore_errors: true         # keep going if one video in a playlist/channel fails
+  max_items: null             # cap number of videos pulled from a playlist/channel; null = no limit
+
+logging:
+  level: INFO
+  log_file: logs/acquisition.log

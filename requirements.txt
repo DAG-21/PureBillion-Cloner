@@ -1,4 +1,6 @@
 yt-dlp
+pyyaml
+tqdm
 ffmpeg-python
 faster-whisper
 pyannote.audio
