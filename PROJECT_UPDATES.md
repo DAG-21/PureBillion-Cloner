@@ -1,7 +1,7 @@
 # Project Updates
 
 > Living status doc. Read this first when resuming work in a new session.
-> Last updated: 2026-07-31
+> Last updated: 2026-08-01
 
 ## What this project is
 
@@ -29,7 +29,7 @@ Full pipeline (11 stages, `src/<stage>/`):
 
 Evaluation (BERTScore, ROUGE, BLEU, RAGAS) lives in `eval/`.
 
-## Current status: Phase 1 (acquisition) + Phase 2 (audio extraction) — implemented, uncommitted
+## Current status: Phase 1 (acquisition) + Phase 2 (audio extraction) — implemented and committed
 
 Stages 3–11 are still empty scaffold stubs (`src/<stage>/*.py` are ~6-line
 placeholder files). Real work so far is in `src/acquisition/` and
@@ -56,6 +56,9 @@ Given a single video, playlist, or channel URL, it:
 - Supports `--dry-run` to preview without downloading
 - Supports `--max-items` (cap playlist/channel size), `--quality`,
   `--output-dir`, `--log-level`, `--config` overrides
+- `--quality` also controls audio selection in `--audio-only` mode:
+  `lowest`/`worst` → `worstaudio/worst`, anything else → `bestaudio/best`
+  (the default, numeric height values like `"1080"` only apply to video mode)
 
 File map: `download.py` (CLI) → `downloader.py` (`VideoDownloader` engine)
 → `config.py` (`configs/acquisition.yaml` → `AcquisitionConfig`) +
@@ -101,18 +104,24 @@ config paths becomes routine.
 
 ### Git state as of last check
 
-On `master`. Working tree has **uncommitted changes**:
+On `main` (renamed from `master` on 2026-08-01 — see below), working tree
+clean, up to date with `origin/main`. Latest commit:
+`9bf96de Harden Phase 1 acquisition and implement Phase 2 audio extraction`
+— covers all the Phase 1 hardening (mode-aware dedup, history migration,
+audio-only quality selector) and the full Phase 2 implementation.
+`data/raw/` is gitignored, so none of the downloaded media/metadata/history
+CSVs are tracked in git — only source code and configs.
 
-- Modified: `configs/acquisition.yaml`, `configs/audio.yaml`,
-  `src/acquisition/config.py`, `downloader.py`, `history.py`,
-  `src/audio/extract.py`
-- New/untracked: `src/audio/config.py`, `extractor.py`, `history.py`,
-  `logging_setup.py`, `tests/acquisition/` (has a `test_download.py` written
-  earlier, now **stale** — see below)
-- Deleted: `tests/.gitkeep`
-
-**Not yet committed** — first thing to check on resume is whether this
-should be committed, and if so with what message.
+**Branch rename (2026-08-01)**: the GitHub repo
+(`DAG-21/PureBillion-Cloner`) had two unrelated branches — `main`
+(a single disconnected "Initial commit", GitHub's default HEAD branch) and
+`master` (the actual project history, what local work was based on).
+Local `master` was renamed to `main` and force-pushed, replacing the
+throwaway initial commit so `origin/main` now has the full real history and
+matches what GitHub already treated as default. `origin/master` still
+exists on GitHub with the old (pre-force-push) history and was **not**
+deleted — it's an orphaned leftover, safe to delete whenever, just hasn't
+been asked for yet.
 
 **Test suite is currently broken and intentionally left that way**:
 `tests/acquisition/test_download.py`'s `make_config()` fixture builds
@@ -124,10 +133,14 @@ file") — don't fix this without being asked.
 
 ### Real data collected so far
 
-- 1 video+audio download: `lNw1Ts_vO9A.mp4` (~15MB)
-- 16 audio-only downloads in `data/raw/audio/`: the same video plus the
-  full 15-video "Sadhguru on Mysticism & Occult" playlist
-  (`PLU4wqwok6puw`)
+- 1 video+audio download: `lNw1Ts_vO9A.mp4` (~15MB) in `data/raw/videos/`
+- 56 audio-only downloads in `data/raw/audio/`, across 3 playlists/videos:
+  - 1 standalone test video (`lNw1Ts_vO9A`)
+  - "Sadhguru on Mysticism & Occult" playlist (`PLU4wqwok6puw`) — 15 videos
+  - An anxiety/stress/sleep playlist (`PL3uDtbb3OvDOJlFBIo5JfBYYth9S1WT6W`)
+    — 7 videos
+  - A relationships/love playlist (`PLbStFAipRy-A`) — 33 videos
+- All 56 have a matching metadata JSON in `data/raw/metadata/`
 - No ffmpeg-based extraction has run for real yet (the one real video
   already has audio available directly, so extraction correctly skips it
   — verified via a scratch-directory test, not against real data)
@@ -145,14 +158,15 @@ file") — don't fix this without being asked.
 
 ## Likely next steps
 
-1. Decide whether to commit the Phase 1 + Phase 2 work as-is.
-2. Run a real ffmpeg extraction against a video that doesn't already have
+1. Run a real ffmpeg extraction against a video that doesn't already have
    audio downloaded separately, to validate Phase 2 end-to-end on real
-   (non-scratch) data.
-3. Move on to Phase 3 (transcription via faster-whisper) —
-   `src/transcription/transcribe.py` is currently a stub.
-4. Confirm the target public figure / source channel(s) before acquiring
-   more data at scale.
+   (non-scratch) data — currently only verified via a scratch-directory test.
+2. Move on to Phase 3 (transcription via faster-whisper) —
+   `src/transcription/transcribe.py` is currently a stub. There's now a
+   healthy amount of raw audio (56 files) to transcribe.
+3. Confirm the target public figure / source channel(s) before acquiring
+   more data at scale (everything downloaded so far is Sadhguru content).
+4. Decide whether to delete the orphaned `origin/master` branch on GitHub.
 
 ---
 *Update this file whenever a phase is completed, the architecture changes,
