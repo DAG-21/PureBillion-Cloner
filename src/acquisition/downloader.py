@@ -73,6 +73,7 @@ class VideoDownloader:
     def __init__(self, config: AcquisitionConfig) -> None:
         self.config = config
         self.config.output.videos_dir.mkdir(parents=True, exist_ok=True)
+        self.config.output.audio_dir.mkdir(parents=True, exist_ok=True)
         self.config.output.metadata_dir.mkdir(parents=True, exist_ok=True)
         self.history = DownloadHistory(config.output.history_file)
         self._progress_bars: Dict[str, tqdm] = {}
@@ -112,8 +113,18 @@ class VideoDownloader:
 
     # -- yt-dlp options -----------------------------------------------------
 
+    def _mode(self) -> str:
+        """Return "audio" or "video" -- the download's identity for dedup/history."""
+        return "audio" if self.config.download.audio_only else "video"
+
+    def _output_dir(self) -> Path:
+        """Audio-only downloads go to audio_dir; video+audio downloads go to videos_dir."""
+        return self.config.output.audio_dir if self.config.download.audio_only else self.config.output.videos_dir
+
     def _format_selector(self) -> str:
         if self.config.download.audio_only:
+            if self.config.download.quality in ("lowest", "worst"):
+                return "worstaudio/worst"
             return "bestaudio/best"
         height = self.config.download.quality
         return f"bestvideo[height<={height}]+bestaudio/best[height<={height}]"
@@ -122,7 +133,7 @@ class VideoDownloader:
         opts: Dict[str, Any] = {
             "format": self._format_selector(),
             "merge_output_format": self.config.download.container,
-            "outtmpl": str(self.config.output.videos_dir / "%(id)s.%(ext)s"),
+            "outtmpl": str(self._output_dir() / "%(id)s.%(ext)s"),
             "noplaylist": True,  # we resolve playlists ourselves and download one video at a time
             "quiet": True,
             "no_warnings": True,
@@ -172,10 +183,11 @@ class VideoDownloader:
         if requested:
             return Path(requested[0]["filepath"])
         ext = info.get("ext", self.config.download.container)
-        return self.config.output.videos_dir / f"{info['id']}.{ext}"
+        return self._output_dir() / f"{info['id']}.{ext}"
 
-    def _already_on_disk(self, video_id: str) -> bool:
-        return any(self.config.output.videos_dir.glob(f"{video_id}.*"))
+    def _already_on_disk(self, video_id: str, mode: str) -> bool:
+        output_dir = self.config.output.audio_dir if mode == "audio" else self.config.output.videos_dir
+        return any(output_dir.glob(f"{video_id}.*"))
 
     # -- download loop --------------------------------------------------
 
@@ -184,6 +196,7 @@ class VideoDownloader:
         entries = self.resolve_entries(url)
         logger.info("Resolved %d video(s) from %s", len(entries), url)
 
+        mode = self._mode()
         summary = DownloadSummary()
         for entry in tqdm(entries, desc="Videos", unit="video"):
             video_id = entry.get("id")
@@ -198,8 +211,8 @@ class VideoDownloader:
                 or f"https://www.youtube.com/watch?v={video_id}"
             )
 
-            if self.history.is_downloaded(video_id) or self._already_on_disk(video_id):
-                logger.info("Skipping already-downloaded video: %s (%s)", video_id, title)
+            if self.history.is_downloaded(video_id, mode) or self._already_on_disk(video_id, mode):
+                logger.info("Skipping already-downloaded video: %s (%s, mode=%s)", video_id, title, mode)
                 summary.skipped += 1
                 continue
 
@@ -208,12 +221,12 @@ class VideoDownloader:
                 summary.would_download += 1
                 continue
 
-            self._download_single(video_id, video_url, title, summary)
+            self._download_single(video_id, video_url, title, mode, summary)
 
         return summary
 
     def _download_single(
-        self, video_id: str, video_url: str, title: str, summary: DownloadSummary
+        self, video_id: str, video_url: str, title: str, mode: str, summary: DownloadSummary
     ) -> None:
         max_retries = self.config.retry.max_retries
         last_error: Optional[Exception] = None
@@ -235,6 +248,7 @@ class VideoDownloader:
                         title=title,
                         url=video_url,
                         status="success",
+                        mode=mode,
                         output_path=str(output_path),
                         timestamp=now_iso(),
                     )
@@ -266,6 +280,7 @@ class VideoDownloader:
                 title=title,
                 url=video_url,
                 status="failed",
+                mode=mode,
                 error=str(last_error) if last_error else "unknown error",
                 timestamp=now_iso(),
             )

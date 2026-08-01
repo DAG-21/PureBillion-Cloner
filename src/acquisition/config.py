@@ -19,6 +19,7 @@ DEFAULT_CONFIG_PATH = PROJECT_ROOT / "configs" / "acquisition.yaml"
 @dataclass(slots=True)
 class OutputConfig:
     videos_dir: Path
+    audio_dir: Path
     metadata_dir: Path
     history_file: Path
 
@@ -93,6 +94,7 @@ def load_config(config_path: Union[Path, str] = DEFAULT_CONFIG_PATH) -> Acquisit
 
     output = OutputConfig(
         videos_dir=_resolve_path(output_raw.get("videos_dir", "data/raw/videos")),  # type: ignore[arg-type]
+        audio_dir=_resolve_path(output_raw.get("audio_dir", "data/raw/audio")),  # type: ignore[arg-type]
         metadata_dir=_resolve_path(output_raw.get("metadata_dir", "data/raw/metadata")),  # type: ignore[arg-type]
         history_file=_resolve_path(
             output_raw.get("history_file", "data/raw/download_history.csv")

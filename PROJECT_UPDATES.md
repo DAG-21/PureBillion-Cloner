@@ -1,7 +1,7 @@
 # Project Updates
 
 > Living status doc. Read this first when resuming work in a new session.
-> Last updated: 2026-07-28
+> Last updated: 2026-07-31
 
 ## What this project is
 
@@ -29,77 +29,130 @@ Full pipeline (11 stages, `src/<stage>/`):
 
 Evaluation (BERTScore, ROUGE, BLEU, RAGAS) lives in `eval/`.
 
-## Current status: Phase 1 (acquisition) — implemented, uncommitted
+## Current status: Phase 1 (acquisition) + Phase 2 (audio extraction) — implemented, uncommitted
 
-Everything below Phase 1 (stages 2–11) is still an empty scaffold stub
-(`src/<stage>/*.py` are ~6-line placeholder files). All real work so far is
-in `src/acquisition/`.
+Stages 3–11 are still empty scaffold stubs (`src/<stage>/*.py` are ~6-line
+placeholder files). Real work so far is in `src/acquisition/` and
+`src/audio/`.
 
-### What's built
+### What's built — Phase 1 (`src/acquisition/`)
 
 CLI: `python -m src.acquisition.download <url> [options]`
 
 Given a single video, playlist, or channel URL, it:
 - Flat-resolves the URL into a list of video entries via yt-dlp
-- Downloads each video (video+audio, or `--audio-only`) at a configurable
-  max quality, into `data/raw/videos/<id>.<ext>`
+- Downloads each video at a configurable max quality:
+  - video+audio → `data/raw/videos/<id>.<ext>`
+  - `--audio-only` → `data/raw/audio/<id>.<ext>` (separate directory, so the
+    two modes never collide on disk)
 - Extracts and saves per-video metadata JSON to `data/raw/metadata/<id>.json`
   (title, description, channel, duration, view/like counts, resolution, etc.)
-- Logs every attempt (success/failed) to `data/raw/download_history.csv`
-- Skips videos already downloaded (checks history CSV + checks disk) —
-  reruns are idempotent
+- Logs every attempt (success/failed) to `data/raw/download_history.csv`,
+  including which `mode` (`video`/`audio`) it was
+- Skips videos already downloaded **per mode** (checks history CSV + disk) —
+  reruns are idempotent, and downloading audio-only doesn't skip a later
+  full video+audio download of the same video, or vice versa
 - Retries failed downloads with exponential backoff
 - Supports `--dry-run` to preview without downloading
 - Supports `--max-items` (cap playlist/channel size), `--quality`,
   `--output-dir`, `--log-level`, `--config` overrides
 
-### File map (`src/acquisition/`)
+File map: `download.py` (CLI) → `downloader.py` (`VideoDownloader` engine)
+→ `config.py` (`configs/acquisition.yaml` → `AcquisitionConfig`) +
+`metadata.py` (per-video JSON sidecars) + `history.py` (`DownloadHistory`,
+CSV ledger keyed on `(video_id, mode)`) + `logging_setup.py`.
 
-| File | Role |
-|---|---|
-| `download.py` | CLI entry point — arg parsing, config/logging setup, calls `VideoDownloader`. No download logic itself. |
-| `downloader.py` | `VideoDownloader` class — the actual engine: URL resolution, yt-dlp options, retry/backoff loop, progress bars, wires metadata + history together. Importable independent of the CLI. |
-| `config.py` | Loads `configs/acquisition.yaml` into typed dataclasses (`AcquisitionConfig`). |
-| `metadata.py` | Extracts a stable field set from yt-dlp's info dict, saves JSON sidecar per video. |
-| `history.py` | CSV-backed download ledger (`DownloadHistory`) — tracks completed video IDs so reruns skip them. |
-| `logging_setup.py` | Console + optional file logging; quiets noisy yt-dlp/urllib3 loggers below DEBUG. |
+**Note on history schema**: `history.py`'s `DownloadHistory` auto-migrates
+old-schema CSVs (pre-`mode` column) to the current schema on load, rather
+than corrupting them via a naive positional append — this was a real bug
+hit and fixed during Phase 1 hardening (2026-07-31).
 
-Config: `configs/acquisition.yaml` — output dirs, download quality/format/
-rate-limit/concurrency, retry policy (3 attempts, exponential backoff),
-network settings (timeout, optional cookies file for age-restricted videos),
-playlist handling (ignore-errors, optional max-items cap), logging level/file.
+### What's built — Phase 2 (`src/audio/`)
+
+CLI: `python -m src.audio.extract [options]`
+
+- Scans `data/raw/videos/` for video files (no video present for an ID = no
+  extraction to do — audio-only downloads never land there in the first
+  place)
+- For each video, extracts its audio track via `ffmpeg` (shells out via
+  `subprocess`, not the `ffmpeg-python` package in requirements.txt) into
+  `data/raw/audio/<id>.<format>` (default `wav`, 16kHz mono — matches
+  faster-whisper's expected input)
+- Skips an ID if **any** audio file already exists for it in
+  `data/raw/audio/` (any extension) or is recorded in
+  `data/raw/audio_extract_history.csv` — so a video whose audio was already
+  fetched directly via `--audio-only` is never redundantly re-extracted
+- Supports `--dry-run`, `--input-dir`, `--output-dir`, `--format`
+  (`wav`/`flac`/`mp3`), `--log-level`, `--config` overrides
+- Raises immediately (before scanning) if `ffmpeg` isn't on PATH
+
+File map: `extract.py` (CLI) → `extractor.py` (`AudioExtractor` engine) →
+`config.py` (`configs/audio.yaml` → `AudioConfig`) + `history.py`
+(`ExtractHistory`, simpler CSV ledger — no mode dimension needed) +
+`logging_setup.py` (self-contained copy, not shared with acquisition, to
+keep stages independently runnable).
+
+**Known gap**: there's no `--history-file` CLI override for either stage —
+overriding `--output-dir` alone still writes to the *default* history file
+location. Hit this during testing (a scratch/test run's history row landed
+in the real `data/raw/*_history.csv` and had to be manually cleaned up).
+Worth adding a `--history-file` override if ad-hoc testing against real
+config paths becomes routine.
 
 ### Git state as of last check
 
-On `master`, 1 commit ahead of nothing (`341b56a Scaffold persona-clone
-project structure`). Working tree has **uncommitted changes** implementing
-Phase 1:
+On `master`. Working tree has **uncommitted changes**:
 
-- Modified: `.gitignore`, `configs/acquisition.yaml`, `requirements.txt`,
-  `src/acquisition/download.py`
-- New/untracked: `src/acquisition/config.py`, `downloader.py`, `history.py`,
-  `logging_setup.py`, `metadata.py`
+- Modified: `configs/acquisition.yaml`, `configs/audio.yaml`,
+  `src/acquisition/config.py`, `downloader.py`, `history.py`,
+  `src/audio/extract.py`
+- New/untracked: `src/audio/config.py`, `extractor.py`, `history.py`,
+  `logging_setup.py`, `tests/acquisition/` (has a `test_download.py` written
+  earlier, now **stale** — see below)
+- Deleted: `tests/.gitkeep`
 
 **Not yet committed** — first thing to check on resume is whether this
 should be committed, and if so with what message.
 
+**Test suite is currently broken and intentionally left that way**:
+`tests/acquisition/test_download.py`'s `make_config()` fixture builds
+`OutputConfig(...)` without the `audio_dir` field added during Phase 1
+hardening, so every test in that file fails at construction
+(`TypeError: missing required argument 'audio_dir'`). User explicitly said
+not to maintain the test suite for now ("Make the changes in the main
+file") — don't fix this without being asked.
+
+### Real data collected so far
+
+- 1 video+audio download: `lNw1Ts_vO9A.mp4` (~15MB)
+- 16 audio-only downloads in `data/raw/audio/`: the same video plus the
+  full 15-video "Sadhguru on Mysticism & Occult" playlist
+  (`PLU4wqwok6puw`)
+- No ffmpeg-based extraction has run for real yet (the one real video
+  already has audio available directly, so extraction correctly skips it
+  — verified via a scratch-directory test, not against real data)
+
 ## What's NOT done yet
 
-- No tests for `src/acquisition/` (or anywhere — `tests/` dir exists but
-  appears empty/unpopulated)
+- Test suite is stale/broken (see above) — not being maintained right now
+  per explicit user instruction
 - No transcript/caption fetching — Phase 1 is video+metadata only
-- Stages 2–11 (audio extraction through serving) are unimplemented stubs
+- Stages 3–11 (transcription through serving) are unimplemented stubs
 - No `.env` filled in yet (only `.env.example` exists)
-- No actual data collected yet (need to confirm: has anyone run
-  `download.py` against a real channel/playlist to seed `data/raw/`?)
+- Target public figure so far is Sadhguru (based on videos downloaded), but
+  this hasn't been explicitly confirmed as *the* project target — worth
+  double-checking before scaling up acquisition
 
 ## Likely next steps
 
-1. Decide whether to commit the Phase 1 work as-is.
-2. Either write tests for acquisition, or move on to Phase 2 (audio
-   extraction via ffmpeg) — `src/audio/extract.py` is currently a stub.
-3. Identify the actual target public figure / source channel(s) to run
-   acquisition against for real.
+1. Decide whether to commit the Phase 1 + Phase 2 work as-is.
+2. Run a real ffmpeg extraction against a video that doesn't already have
+   audio downloaded separately, to validate Phase 2 end-to-end on real
+   (non-scratch) data.
+3. Move on to Phase 3 (transcription via faster-whisper) —
+   `src/transcription/transcribe.py` is currently a stub.
+4. Confirm the target public figure / source channel(s) before acquiring
+   more data at scale.
 
 ---
 *Update this file whenever a phase is completed, the architecture changes,

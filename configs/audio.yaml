@@ -1,2 +1,20 @@
-# Configuration for src/audio/
-# TODO: define stage-specific parameters
+# Configuration for src/audio/ (Phase 2: Audio Extraction)
+#
+# All relative paths are resolved against the project root
+# (the directory containing this configs/ folder).
+
+input:
+  videos_dir: data/raw/videos   # source video files to extract audio from
+
+output:
+  audio_dir: data/raw/audio     # shared with acquisition's audio-only downloads
+  history_file: data/raw/audio_extract_history.csv
+
+extract:
+  format: wav          # output container/codec: wav (pcm_s16le), flac, or mp3
+  sample_rate: 16000    # Hz -- matches faster-whisper's expected input
+  channels: 1            # mono
+
+logging:
+  level: INFO
+  log_file: logs/audio.log

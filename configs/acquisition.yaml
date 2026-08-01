@@ -4,7 +4,8 @@
 # (the directory containing this configs/ folder).
 
 output:
-  videos_dir: data/raw/videos
+  videos_dir: data/raw/videos   # video+audio downloads
+  audio_dir: data/raw/audio     # audio-only downloads (and, later, ffmpeg-extracted audio)
   metadata_dir: data/raw/metadata
   history_file: data/raw/download_history.csv
 
