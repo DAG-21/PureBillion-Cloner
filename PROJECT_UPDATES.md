@@ -160,9 +160,11 @@ machine and run for real before Phase 4 (diarization) can start.
 ### Git state as of last check
 
 On `main` (renamed from `master` on 2026-08-01 — see below), working tree
-clean, up to date with `origin/main`. Latest commit:
+clean, up to date with `origin/main` (pushed 2026-08-04). Latest commit:
+`4ffaff9 Scaffold Phase 3 transcription stage (faster-whisper)` — adds
+`src/transcription/` (see Phase 3 section above). Prior commit
 `9bf96de Harden Phase 1 acquisition and implement Phase 2 audio extraction`
-— covers all the Phase 1 hardening (mode-aware dedup, history migration,
+covers all the Phase 1 hardening (mode-aware dedup, history migration,
 audio-only quality selector) and the full Phase 2 implementation.
 `data/raw/` is gitignored, so none of the downloaded media/metadata/history
 CSVs are tracked in git — only source code and configs.
