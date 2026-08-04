@@ -1,7 +1,7 @@
 # Project Updates
 
 > Living status doc. Read this first when resuming work in a new session.
-> Last updated: 2026-08-01
+> Last updated: 2026-08-03 (Phase 3 scaffolded)
 
 ## What this project is
 
@@ -29,11 +29,11 @@ Full pipeline (11 stages, `src/<stage>/`):
 
 Evaluation (BERTScore, ROUGE, BLEU, RAGAS) lives in `eval/`.
 
-## Current status: Phase 1 (acquisition) + Phase 2 (audio extraction) — implemented and committed
+## Current status: Phase 1 (acquisition) + Phase 2 (audio extraction) done; Phase 3 (transcription) scaffolded, not yet run for real
 
-Stages 3–11 are still empty scaffold stubs (`src/<stage>/*.py` are ~6-line
-placeholder files). Real work so far is in `src/acquisition/` and
-`src/audio/`.
+Stages 4–11 are still empty scaffold stubs (`src/<stage>/*.py` are ~6-line
+placeholder files). Real work so far is in `src/acquisition/`, `src/audio/`,
+and (as of 2026-08-03) `src/transcription/`.
 
 ### What's built — Phase 1 (`src/acquisition/`)
 
@@ -102,6 +102,61 @@ in the real `data/raw/*_history.csv` and had to be manually cleaned up).
 Worth adding a `--history-file` override if ad-hoc testing against real
 config paths becomes routine.
 
+### What's built — Phase 3 (`src/transcription/`) — scaffolded 2026-08-03, NOT yet run on real data
+
+CLI: `python -m src.transcription.transcribe [options]`
+
+Written so the code could be committed on this (GPU-less) dev machine and
+pulled onto a separate GPU box to actually run — see hardware note below.
+
+- Scans `data/raw/audio/` for **any** audio file extension (webm/m4a/wav/
+  flac/mp3 — audio-only downloads and ffmpeg extractions don't share one
+  format), transcribes each with faster-whisper
+- The `WhisperModel` is loaded **lazily**, only on the first real
+  transcription — not at construction — so `--dry-run` works without the
+  model weights downloaded or a GPU present. Verified: `--dry-run` correctly
+  listed all 199 files in `data/raw/audio/` on this CPU-only laptop with
+  `faster-whisper` not even installed.
+- Per-file output: `data/transcripts/<id>.json` — language, duration,
+  segment list (id/start/end/text), and word-level timestamps (needed for
+  diarization alignment in stage 4)
+- Skips an ID if a transcript JSON already exists for it or is recorded in
+  `data/transcripts/transcription_history.csv`
+- Supports `--dry-run`, `--input-dir`, `--output-dir`, `--history-file`
+  (added proactively here — Phase 1/2 are missing this override, see known
+  gap above), `--model-size`, `--device`, `--compute-type`, `--language`,
+  `--log-level`, `--config` overrides
+
+File map: `transcribe.py` (CLI) → `transcriber.py` (`Transcriber` engine) →
+`config.py` (`configs/transcription.yaml` → `TranscriptionConfig`) +
+`history.py` (`TranscriptionHistory`) + `logging_setup.py` (self-contained
+copy, same convention as audio).
+
+**Model choice**: `configs/transcription.yaml` defaults to faster-whisper
+`large-v3`, `device: auto`, `compute_type: default` (ctranslate2 picks the
+best type for whatever device it resolves to). Chosen over smaller/distilled
+models because transcript fidelity directly feeds fine-tuning and RAG
+quality — decided explicitly with the user rather than defaulting to
+something lighter for speed.
+
+**Hardware note**: this was scaffolded on a Dell Latitude 7490 (16GB RAM,
+Intel UHD 620 integrated graphics, no CUDA) — not viable for running
+`large-v3` at any real scale (CPU-only, rough estimate well under real-time
+throughput; 199 files at Sadhguru-talk lengths could mean days of runtime).
+User is planning to run the real batch on a separate machine (128GB RAM,
+2TB SSD, RTX A4000 16GB VRAM) — confirmed sufficient for `large-v3`
+transcription, pyannote diarization (stage 4), and BGE-M3 embeddings
+(stage 7). That machine's 16GB VRAM will be the binding constraint later,
+at fine-tuning (stage 9) and serving (stage 11): comfortable for a 7B-class
+base model via QLoRA, tighter for 13B, not realistic beyond that without
+multi-GPU or heavier quantization. Base model choice for fine-tuning/serving
+is still undecided — `configs/finetuning.yaml` and `configs/serving.yaml`
+are still empty stubs.
+
+**Not yet done for Phase 3**: no real transcription run has happened
+anywhere (dry-run only, on this machine). Needs to be pulled onto the GPU
+machine and run for real before Phase 4 (diarization) can start.
+
 ### Git state as of last check
 
 On `main` (renamed from `master` on 2026-08-01 — see below), working tree
@@ -134,13 +189,23 @@ file") — don't fix this without being asked.
 ### Real data collected so far
 
 - 1 video+audio download: `lNw1Ts_vO9A.mp4` (~15MB) in `data/raw/videos/`
-- 56 audio-only downloads in `data/raw/audio/`, across 3 playlists/videos:
+- 199 audio-only downloads in `data/raw/audio/`, across 6 playlists/videos:
   - 1 standalone test video (`lNw1Ts_vO9A`)
   - "Sadhguru on Mysticism & Occult" playlist (`PLU4wqwok6puw`) — 15 videos
   - An anxiety/stress/sleep playlist (`PL3uDtbb3OvDOJlFBIo5JfBYYth9S1WT6W`)
     — 7 videos
   - A relationships/love playlist (`PLbStFAipRy-A`) — 33 videos
-- All 56 have a matching metadata JSON in `data/raw/metadata/`
+  - "Sadhguru on Food & Health" playlist (`PLPEQGwS9Hkso`) — 13 videos
+    (downloaded 2026-08-03)
+  - "Sadhguru on Mental Health & Mind" playlist (`PLDj3qLjlJpYY`) — 15 videos
+    (downloaded 2026-08-03)
+  - "Thoughts and the Mind" playlist (`PL3uDtbb3OvDPBGzSYKBeEFlrG48_0DBC4`)
+    — 127 videos total; 115 succeeded, 8 already-downloaded skipped, 4
+    permanently failed (private/access-restricted videos:
+    `xSFtKjdhBTk`, `eBAVAro8t2g`, `q1lfjC1eH9Y`, `YVLxIhCHhpg` — not
+    recoverable via retry) (downloaded 2026-08-03)
+- All successfully-downloaded audio files have a matching metadata JSON in
+  `data/raw/metadata/`
 - No ffmpeg-based extraction has run for real yet (the one real video
   already has audio available directly, so extraction correctly skips it
   — verified via a scratch-directory test, not against real data)
@@ -150,7 +215,8 @@ file") — don't fix this without being asked.
 - Test suite is stale/broken (see above) — not being maintained right now
   per explicit user instruction
 - No transcript/caption fetching — Phase 1 is video+metadata only
-- Stages 3–11 (transcription through serving) are unimplemented stubs
+- Stages 4–11 (diarization through serving) are unimplemented stubs; Phase 3
+  (transcription) is scaffolded but has never been run for real (see above)
 - No `.env` filled in yet (only `.env.example` exists)
 - Target public figure so far is Sadhguru (based on videos downloaded), but
   this hasn't been explicitly confirmed as *the* project target — worth
@@ -158,15 +224,18 @@ file") — don't fix this without being asked.
 
 ## Likely next steps
 
-1. Run a real ffmpeg extraction against a video that doesn't already have
+1. Pull `src/transcription/` onto the GPU machine (128GB RAM / A4000) and
+   run `python -m src.transcription.transcribe` for real against all 199
+   audio files — this is the first real (non-dry-run) use of Phase 3.
+2. Run a real ffmpeg extraction against a video that doesn't already have
    audio downloaded separately, to validate Phase 2 end-to-end on real
    (non-scratch) data — currently only verified via a scratch-directory test.
-2. Move on to Phase 3 (transcription via faster-whisper) —
-   `src/transcription/transcribe.py` is currently a stub. There's now a
-   healthy amount of raw audio (56 files) to transcribe.
 3. Confirm the target public figure / source channel(s) before acquiring
    more data at scale (everything downloaded so far is Sadhguru content).
 4. Decide whether to delete the orphaned `origin/master` branch on GitHub.
+5. Decide on a base model for fine-tuning/serving (stages 9 & 11) — nothing
+   picked yet; A4000's 16GB VRAM comfortably fits a 7B-class model via
+   QLoRA, tighter for 13B, not realistic beyond that on a single card.
 
 ---
 *Update this file whenever a phase is completed, the architecture changes,

@@ -1,2 +1,25 @@
-# Configuration for src/transcription/
-# TODO: define stage-specific parameters
+# Configuration for src/transcription/ (Phase 3: Transcription)
+#
+# All relative paths are resolved against the project root
+# (the directory containing this configs/ folder).
+
+input:
+  audio_dir: data/raw/audio
+
+output:
+  transcripts_dir: data/transcripts
+  history_file: data/transcripts/transcription_history.csv
+
+model:
+  size: large-v3        # faster-whisper model size/name (e.g. large-v3, distil-large-v3, medium)
+  device: auto           # auto | cuda | cpu -- "auto" picks cuda if available, else cpu
+  compute_type: default  # default | float16 | int8 | int8_float16 | float32
+                          # "default" lets ctranslate2 pick the best type for the device
+  language: en            # forced language code; set to "auto" to let whisper detect it
+  vad_filter: true        # skip silence/non-speech (long talks have a lot of it)
+  word_timestamps: true   # needed for diarization alignment in the next stage
+  beam_size: 5
+
+logging:
+  level: INFO
+  log_file: logs/transcription.log
