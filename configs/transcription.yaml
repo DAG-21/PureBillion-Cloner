@@ -12,9 +12,12 @@ output:
 
 model:
   size: large-v3        # faster-whisper model size/name (e.g. large-v3, distil-large-v3, medium)
-  device: auto           # auto | cuda | cpu -- "auto" picks cuda if available, else cpu
-  compute_type: default  # default | float16 | int8 | int8_float16 | float32
-                          # "default" lets ctranslate2 pick the best type for the device
+  device: cuda           # auto | cuda | cpu -- forced to cuda (not auto) so a broken CUDA/cuDNN
+                          # setup fails loudly instead of silently falling back to CPU
+  compute_type: int8_float16  # default | float16 | int8 | int8_float16 | float32
+                          # large-v3 in float16 needs ~4.7GB VRAM -- doesn't fit the T1000's
+                          # 4GB. int8_float16 needs ~3.0-3.2GB, leaving headroom for VAD +
+                          # word-timestamp alignment. Revisit if this machine's GPU changes.
   language: en            # forced language code; set to "auto" to let whisper detect it
   vad_filter: true        # skip silence/non-speech (long talks have a lot of it)
   word_timestamps: true   # needed for diarization alignment in the next stage

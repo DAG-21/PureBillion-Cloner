@@ -1,7 +1,7 @@
 # Project Updates
 
 > Living status doc. Read this first when resuming work in a new session.
-> Last updated: 2026-08-03 (Phase 3 scaffolded)
+> Last updated: 2026-08-04 (GPU machine set up, Phase 3 real run still blocked on data transfer)
 
 ## What this project is
 
@@ -29,11 +29,22 @@ Full pipeline (11 stages, `src/<stage>/`):
 
 Evaluation (BERTScore, ROUGE, BLEU, RAGAS) lives in `eval/`.
 
-## Current status: Phase 1 (acquisition) + Phase 2 (audio extraction) done; Phase 3 (transcription) scaffolded, not yet run for real
+## Current status: Phase 1 (acquisition) + Phase 2 (audio extraction) done; Phase 3 (transcription) scaffolded, GPU machine now set up, real run still blocked on getting data onto that machine
 
 Stages 4–11 are still empty scaffold stubs (`src/<stage>/*.py` are ~6-line
 placeholder files). Real work so far is in `src/acquisition/`, `src/audio/`,
 and (as of 2026-08-03) `src/transcription/`.
+
+**⚠️ Hardware discrepancy, unresolved**: the GPU machine actually used on
+2026-08-04 is an **NVIDIA T1000, 4GB VRAM** (Windows 11, driver 595.95, CUDA
+13.2, compute capability 7.5) — confirmed via `nvidia-smi`. This does **not**
+match the machine described below in the original Phase 3 hardware note
+(128GB RAM / RTX A4000 16GB VRAM). Unclear whether the plan changed to this
+T1000 box, or the A4000 machine is a separate/different machine still to be
+used. **Confirm which machine is actually the long-term GPU box before
+assuming stages 4 (diarization), 7 (embeddings), 9 (fine-tuning), 11
+(serving) can run on whatever hardware is at hand** — a 4GB card is a much
+tighter constraint than 16GB, especially for fine-tuning/serving.
 
 ### What's built — Phase 1 (`src/acquisition/`)
 
@@ -132,12 +143,22 @@ File map: `transcribe.py` (CLI) → `transcriber.py` (`Transcriber` engine) →
 `history.py` (`TranscriptionHistory`) + `logging_setup.py` (self-contained
 copy, same convention as audio).
 
-**Model choice**: `configs/transcription.yaml` defaults to faster-whisper
-`large-v3`, `device: auto`, `compute_type: default` (ctranslate2 picks the
-best type for whatever device it resolves to). Chosen over smaller/distilled
-models because transcript fidelity directly feeds fine-tuning and RAG
-quality — decided explicitly with the user rather than defaulting to
-something lighter for speed.
+**Model choice**: `configs/transcription.yaml` uses faster-whisper
+`large-v3`. Chosen over smaller/distilled models because transcript fidelity
+directly feeds fine-tuning and RAG quality — decided explicitly with the
+user rather than defaulting to something lighter for speed.
+
+**Updated 2026-08-04** (on the T1000 GPU machine, see hardware note below):
+`device` changed from `auto` → `cuda`, and `compute_type` changed from
+`default` → `int8_float16`.
+- `device: cuda` (not `auto`) so a broken CUDA/cuDNN setup fails loudly at
+  model load instead of silently falling back to CPU (which would make a
+  `large-v3` run take days without any obvious error).
+- `compute_type: int8_float16` because `large-v3` in `float16` needs ~4.7GB
+  VRAM, which does not fit the T1000's 4GB. `int8_float16` needs roughly
+  3.0–3.2GB, leaving headroom for the VAD filter and word-timestamp
+  alignment. Revisit both settings if this pipeline ends up running on
+  different/bigger GPU hardware (see hardware discrepancy note above).
 
 **Hardware note**: this was scaffolded on a Dell Latitude 7490 (16GB RAM,
 Intel UHD 620 integrated graphics, no CUDA) — not viable for running
@@ -154,13 +175,69 @@ is still undecided — `configs/finetuning.yaml` and `configs/serving.yaml`
 are still empty stubs.
 
 **Not yet done for Phase 3**: no real transcription run has happened
-anywhere (dry-run only, on this machine). Needs to be pulled onto the GPU
-machine and run for real before Phase 4 (diarization) can start.
+anywhere (dry-run only, on the Dell laptop). Needs to be run for real on the
+GPU machine before Phase 4 (diarization) can start — see session log below
+for exactly what's blocking that.
+
+### GPU machine session log (2026-08-04)
+
+Repo was cloned onto a Windows 11 machine with an **NVIDIA T1000 (4GB
+VRAM)** to actually run Phase 3. Progress this session:
+
+- Confirmed via `nvidia-smi` the GPU is idle and visible: driver 595.95,
+  CUDA 13.2, compute capability 7.5.
+- **Python was not installed on this machine at all** (no `python`/`py`/
+  `pip`/`conda` on PATH, no venv). Installed Python 3.11.9 per-user (no
+  admin/UAC available in this shell — `winget`'s default install path tries
+  to write a machine-wide launcher to `C:\ProgramData\Package Cache` and
+  fails with access denied at user scope too). Worked around it by running
+  the cached python.org installer directly with
+  `/quiet InstallAllUsers=0 PrependPath=1 Include_launcher=0`, targeting
+  `%LOCALAPPDATA%\Programs\Python\Python311`. Confirmed the per-user `PATH`
+  registry entry persists for new shells.
+- Created a venv at `.venv/` (already gitignored). Installed **only**
+  Phase 1–3 deps (`pyyaml`, `tqdm`, `ffmpeg-python`, `yt-dlp`,
+  `faster-whisper` — which pulls in `ctranslate2`) rather than the full
+  `requirements.txt`. **`requirements.txt` as it stands will not fully
+  install on this Windows machine** — `vllm` (stage 11) is Linux-only, and
+  `bitsandbytes`/`pyannote.audio`/etc. are for stages not needed yet. Install
+  those incrementally, stage by stage, rather than all at once.
+- `ctranslate2.get_cuda_device_count()` returns `1` — the T1000 is correctly
+  visible to the library faster-whisper actually uses for GPU inference.
+  Note: `faster-whisper`/`ctranslate2` does **not** depend on `torch` at
+  all — no need to fight PyTorch CUDA-build/wheel matching for this stage.
+- Updated `configs/transcription.yaml` (`device: cuda`,
+  `compute_type: int8_float16`) — see Phase 3 section above for why.
+
+**Blocking issue found**: `data/raw/` (the 199 downloaded audio files +
+metadata + history CSVs from Phase 1) is gitignored, so it never came over
+with `git clone`. It only exists on the original Dell laptop where
+acquisition ran. **This machine's `data/` only has the empty scaffold
+subdirectories** — there is nothing to transcribe here yet. User is
+manually transferring `data/raw/` from the laptop to this machine
+(USB/network share/cloud — outside git). No real transcription benchmark or
+full run has happened yet as a result.
+
+**Next steps once `data/raw/` lands on this machine**:
+1. Run one real audio file through `Transcriber` (`device: cuda` is now
+   forced in config) and time it against `nvidia-smi -l 1` running in
+   parallel, to confirm GPU utilization visually and get a real
+   wall-clock/audio-duration ratio (RTF) on this exact T1000.
+2. Sum the `duration` field across `data/raw/metadata/*.json` to get total
+   corpus hours, then multiply by the measured RTF for a real full-199-file
+   time estimate (no reliable estimate exists yet — T1000 is far weaker
+   than the T4/A100-class hardware faster-whisper's published benchmarks
+   use, so those numbers don't transfer directly).
+3. Run the actual `python -m src.transcription.transcribe` batch job.
 
 ### Git state as of last check
 
-On `main` (renamed from `master` on 2026-08-01 — see below), working tree
-clean, up to date with `origin/main` (pushed 2026-08-04). Latest commit:
+On `main` (renamed from `master` on 2026-08-01 — see below). As of the
+2026-08-04 GPU-machine session, working tree has one **uncommitted** change:
+`configs/transcription.yaml` (`device`/`compute_type` update, see Phase 3
+section above) — not yet committed, do that first in the next session if it
+hasn't already been done. Otherwise up to date with `origin/main` (pushed
+2026-08-04). Latest commit:
 `4ffaff9 Scaffold Phase 3 transcription stage (faster-whisper)` — adds
 `src/transcription/` (see Phase 3 section above). Prior commit
 `9bf96de Harden Phase 1 acquisition and implement Phase 2 audio extraction`
@@ -189,6 +266,12 @@ not to maintain the test suite for now ("Make the changes in the main
 file") — don't fix this without being asked.
 
 ### Real data collected so far
+
+**Note**: all of this exists only on the original Dell laptop as of
+2026-08-04 (`data/raw/` is gitignored, never synced via git). User is
+manually transferring it to the T1000 GPU machine — see session log above.
+Confirm it actually landed there before assuming any of this is available
+for the next transcription run.
 
 - 1 video+audio download: `lNw1Ts_vO9A.mp4` (~15MB) in `data/raw/videos/`
 - 199 audio-only downloads in `data/raw/audio/`, across 6 playlists/videos:
@@ -226,18 +309,28 @@ file") — don't fix this without being asked.
 
 ## Likely next steps
 
-1. Pull `src/transcription/` onto the GPU machine (128GB RAM / A4000) and
-   run `python -m src.transcription.transcribe` for real against all 199
-   audio files — this is the first real (non-dry-run) use of Phase 3.
-2. Run a real ffmpeg extraction against a video that doesn't already have
+1. **Resolve the hardware discrepancy** (see flag near the top): is the
+   T1000 (4GB VRAM) the real long-term GPU machine, or is there still a
+   separate 128GB RAM / A4000 (16GB VRAM) machine this should run on
+   instead? This materially changes what's feasible for stages 4/7/9/11.
+2. Confirm `data/raw/` finished transferring onto the T1000 machine, then
+   run the Phase 3 benchmark (single file → RTF → extrapolate) and the real
+   `python -m src.transcription.transcribe` batch — see GPU machine session
+   log above for the exact plan. This is the first real (non-dry-run) use
+   of Phase 3.
+3. Commit the pending `configs/transcription.yaml` change (see Git state
+   above) once back in a session with git access on that machine.
+4. Run a real ffmpeg extraction against a video that doesn't already have
    audio downloaded separately, to validate Phase 2 end-to-end on real
    (non-scratch) data — currently only verified via a scratch-directory test.
-3. Confirm the target public figure / source channel(s) before acquiring
+5. Confirm the target public figure / source channel(s) before acquiring
    more data at scale (everything downloaded so far is Sadhguru content).
-4. Decide whether to delete the orphaned `origin/master` branch on GitHub.
-5. Decide on a base model for fine-tuning/serving (stages 9 & 11) — nothing
-   picked yet; A4000's 16GB VRAM comfortably fits a 7B-class model via
-   QLoRA, tighter for 13B, not realistic beyond that on a single card.
+6. Decide whether to delete the orphaned `origin/master` branch on GitHub.
+7. Decide on a base model for fine-tuning/serving (stages 9 & 11) — nothing
+   picked yet, and now depends on resolving the hardware question above:
+   16GB VRAM (A4000) comfortably fits a 7B-class model via QLoRA, tighter
+   for 13B; 4GB (T1000) would not be viable for fine-tuning or serving any
+   realistic base model at all.
 
 ---
 *Update this file whenever a phase is completed, the architecture changes,
