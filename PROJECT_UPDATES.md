@@ -1,7 +1,8 @@
 # Project Updates
 
 > Living status doc. Read this first when resuming work in a new session.
-> Last updated: 2026-08-04 (GPU machine set up, Phase 3 real run still blocked on data transfer)
+> Last updated: 2026-08-06 (Phase 3 transcription complete — all 199 files
+> transcribed, via a Colab T4 + local T1000 split run)
 
 ## What this project is
 
@@ -29,22 +30,30 @@ Full pipeline (11 stages, `src/<stage>/`):
 
 Evaluation (BERTScore, ROUGE, BLEU, RAGAS) lives in `eval/`.
 
-## Current status: Phase 1 (acquisition) + Phase 2 (audio extraction) done; Phase 3 (transcription) scaffolded, GPU machine now set up, real run still blocked on getting data onto that machine
+## Current status: Phase 1 (acquisition), Phase 2 (audio extraction), and Phase 3 (transcription) all done. Phase 4 (diarization) is next.
 
-Stages 4–11 are still empty scaffold stubs (`src/<stage>/*.py` are ~6-line
-placeholder files). Real work so far is in `src/acquisition/`, `src/audio/`,
-and (as of 2026-08-03) `src/transcription/`.
+Stages 5–11 are still empty scaffold stubs (`src/<stage>/*.py` are ~6-line
+placeholder files); stage 4 (diarization) is also still an empty stub. Real
+work so far is in `src/acquisition/`, `src/audio/`, and `src/transcription/`.
 
-**⚠️ Hardware discrepancy, unresolved**: the GPU machine actually used on
-2026-08-04 is an **NVIDIA T1000, 4GB VRAM** (Windows 11, driver 595.95, CUDA
-13.2, compute capability 7.5) — confirmed via `nvidia-smi`. This does **not**
-match the machine described below in the original Phase 3 hardware note
-(128GB RAM / RTX A4000 16GB VRAM). Unclear whether the plan changed to this
-T1000 box, or the A4000 machine is a separate/different machine still to be
-used. **Confirm which machine is actually the long-term GPU box before
-assuming stages 4 (diarization), 7 (embeddings), 9 (fine-tuning), 11
-(serving) can run on whatever hardware is at hand** — a 4GB card is a much
-tighter constraint than 16GB, especially for fine-tuning/serving.
+All 199 audio files in `data/raw/audio/` now have a matching transcript in
+`data/transcripts/` (verified 2026-08-06) — see "Phase 3 completion" below
+for how the run was actually done (split across Colab T4 and the local
+T1000 to work around a Colab free-tier daily GPU quota cutoff).
+
+**⚠️ Hardware discrepancy, still not explicitly resolved**: the GPU machine
+actually used since 2026-08-04 is an **NVIDIA T1000, 4GB VRAM** (Windows 11,
+driver 595.95, CUDA 13.2, compute capability 7.5) — confirmed via
+`nvidia-smi`. This does **not** match the machine described below in the
+original Phase 3 hardware note (128GB RAM / RTX A4000 16GB VRAM). Unclear
+whether the plan changed to this T1000 box, or the A4000 machine is a
+separate/different machine still to be used. The T1000 has now proven
+*capable* of running Phase 3 end-to-end (see below), so this is no longer a
+hard blocker for transcription — but it's still an open question for stages
+4 (diarization), 7 (embeddings), 9 (fine-tuning), 11 (serving): a 4GB card
+is a much tighter constraint than 16GB, especially for fine-tuning/serving,
+and Phase 3 only worked on the T1000 because faster-whisper/ctranslate2 has
+unusually low VRAM requirements relative to those later stages.
 
 ### What's built — Phase 1 (`src/acquisition/`)
 
@@ -174,10 +183,10 @@ multi-GPU or heavier quantization. Base model choice for fine-tuning/serving
 is still undecided — `configs/finetuning.yaml` and `configs/serving.yaml`
 are still empty stubs.
 
-**Not yet done for Phase 3**: no real transcription run has happened
-anywhere (dry-run only, on the Dell laptop). Needs to be run for real on the
-GPU machine before Phase 4 (diarization) can start — see session log below
-for exactly what's blocking that.
+**Phase 3 is now complete** (2026-08-06) — all 199 files in `data/raw/audio/`
+have a transcript in `data/transcripts/`. See "Phase 3 completion" section
+below for the full story (Colab T4 run + local T1000 run, split due to a
+Colab quota cutoff) and the real RTF numbers measured on both.
 
 ### GPU machine session log (2026-08-04)
 
@@ -218,33 +227,115 @@ manually transferring `data/raw/` from the laptop to this machine
 (USB/network share/cloud — outside git). No real transcription benchmark or
 full run has happened yet as a result.
 
-**Next steps once `data/raw/` lands on this machine**:
-1. Run one real audio file through `Transcriber` (`device: cuda` is now
-   forced in config) and time it against `nvidia-smi -l 1` running in
-   parallel, to confirm GPU utilization visually and get a real
-   wall-clock/audio-duration ratio (RTF) on this exact T1000.
-2. Sum the `duration` field across `data/raw/metadata/*.json` to get total
-   corpus hours, then multiply by the measured RTF for a real full-199-file
-   time estimate (no reliable estimate exists yet — T1000 is far weaker
-   than the T4/A100-class hardware faster-whisper's published benchmarks
-   use, so those numbers don't transfer directly).
-3. Run the actual `python -m src.transcription.transcribe` batch job.
+### Phase 3 completion (2026-08-05 – 2026-08-06)
 
-### Git state as of last check
+`data/raw/` (199 audio files + metadata) was transferred from the Dell
+laptop to the T1000 machine manually via a Google Drive zip download (not
+git — `data/raw/` is still gitignored). Landed as
+`audio-20260805T104651Z-1-001.zip` in `Downloads`, unzipped into
+`data/raw/audio/`.
 
-On `main` (renamed from `master` on 2026-08-01 — see below). As of the
-2026-08-04 GPU-machine session, working tree has one **uncommitted** change:
-`configs/transcription.yaml` (`device`/`compute_type` update, see Phase 3
-section above) — not yet committed, do that first in the next session if it
-hasn't already been done. Otherwise up to date with `origin/main` (pushed
-2026-08-04). Latest commit:
-`4ffaff9 Scaffold Phase 3 transcription stage (faster-whisper)` — adds
-`src/transcription/` (see Phase 3 section above). Prior commit
-`9bf96de Harden Phase 1 acquisition and implement Phase 2 audio extraction`
-covers all the Phase 1 hardening (mode-aware dedup, history migration,
-audio-only quality selector) and the full Phase 2 implementation.
-`data/raw/` is gitignored, so none of the downloaded media/metadata/history
-CSVs are tracked in git — only source code and configs.
+**T1000 blocker found and fixed — missing CUDA runtime, not just a slow
+GPU**: the first real (non-benchmark) transcription attempt on the T1000
+failed with `Library cublas64_12.dll is not found or cannot be loaded`, even
+though `nvidia-smi` and `ctranslate2.get_cuda_device_count()` both showed
+the GPU as available. Root cause: this machine has the NVIDIA *display
+driver* but never got the CUDA Toolkit (or its redistributable runtime
+libraries) installed — `nvidia-smi` only proves the driver is there, not
+that cuBLAS/cuDNN exist. Since there's no admin/UAC access on this machine
+(same constraint hit installing Python originally), a normal CUDA Toolkit
+installer wasn't an option. Fixed instead with the pip-installable runtime
+packages, which need no admin rights:
+```
+pip install nvidia-cublas-cu12 nvidia-cudnn-cu12
+```
+These land under `.venv/Lib/site-packages/nvidia/{cublas,cudnn,cuda_nvrtc}/bin/`.
+Those directories have to be prepended to `PATH` *before* invoking the
+transcribe CLI — they are not picked up automatically, and this is not
+persisted anywhere, so **every fresh shell/session on this machine needs**:
+```
+export PATH="$(pwd)/.venv/Lib/site-packages/nvidia/cublas/bin:$(pwd)/.venv/Lib/site-packages/nvidia/cudnn/bin:$(pwd)/.venv/Lib/site-packages/nvidia/cuda_nvrtc/bin:$PATH"
+```
+before running `python -m src.transcription.transcribe` with `--device cuda`.
+Worth turning into a small activation script or a note in the venv's
+activate script if this machine keeps getting used — currently a manual,
+easy-to-forget step.
+
+**Real RTF measured** (single ~4:43 / 283s audio file, both after the model
+was already cached locally):
+- **T1000**, `compute_type: int8_float16`: 70s processing time → RTF ≈
+  0.247, ~4.0x real-time.
+- **Colab T4**, `compute_type: float16` (via `notebooks/colab_transcription.ipynb`):
+  RTF = 0.227, ~4.4x real-time — only ~9% faster than the T1000, much closer
+  than expected. Likely explanation: the T1000 and T4 are both Turing
+  architecture (compute capability 7.5) with native INT8 tensor-core
+  support, so `int8_float16` on the T1000 plays directly to that shared
+  architectural strength, while the T4 running plain `float16` isn't
+  exploiting its extra compute the same way. A same-compute-type comparison
+  (both on `int8_float16`) would likely show a bigger T4 lead.
+
+**Colab run**: uploaded `data/raw/audio/` to Google Drive, ran
+`notebooks/colab_transcription.ipynb` against a T4. Got through **155 of
+199 files** before the Colab session disconnected and the account's free
+daily GPU quota was cut — no more Colab GPU time available that day. The
+155 completed transcripts were downloaded from Drive back down to this
+machine into `data/transcripts/`.
+
+**Local T1000 finished the rest**: the transcription pipeline's built-in
+skip-duplicate logic (`Transcriber._already_transcribed` in
+`src/transcription/transcriber.py` — checks both the history CSV *and*
+whether `data/transcripts/<id>.json` already exists on disk) meant no code
+changes were needed to resume locally without redoing Colab's work. Colab's
+own history CSV was lost (it defaulted to the Colab VM's ephemeral disk,
+not the Drive-mounted output dir — a gap in the current notebook, since only
+the benchmark cell passes `--history-file`, not the full-run cell), but that
+didn't matter: the file-existence check alone was sufficient. A `--dry-run`
+correctly reported `skipped=155, would_transcribe=44, failed=0` before the
+real run. Ran:
+```
+python -m src.transcription.transcribe --device cuda --compute-type int8_float16
+```
+(with the cuBLAS/cuDNN `PATH` fix above applied first). **Result: 44/44
+succeeded, 0 failed**, wall clock 1:54:29 for that batch. Final state:
+`data/transcripts/` has all 199 `.json` files;
+`transcription_history.csv` has the 44 rows from this local run (the 155
+Colab-completed ones were never re-recorded there, since they were skipped
+via the file-existence path, not the history path — harmless, since nothing
+downstream reads the history CSV as a source of truth, only as a skip
+optimization).
+
+**Known gap to fix if this notebook is reused**: add `--history-file`
+pointing into the Drive-mounted output dir to the full-run cell in
+`notebooks/colab_transcription.ipynb`, matching what the benchmark cell
+already does — otherwise every Colab session loses its history CSV to the
+ephemeral VM disk on disconnect (harmless so far since file-existence is
+also checked, but wasteful if `data/transcripts/` itself isn't Drive-backed
+in some future run).
+
+### Git state as of last check (2026-08-06)
+
+On `main` (renamed from `master` on 2026-08-01 — see below), up to date with
+`origin/main`. Latest commits, newest first:
+- `ebb2a4c Add Colab T4 notebook for Phase 3 transcription` — adds
+  `notebooks/colab_transcription.ipynb` (see "Phase 3 completion" above).
+- `51182a7 Set up GPU machine for Phase 3, tune transcription config for
+  T1000 VRAM` — commits the `device: cuda` / `compute_type: int8_float16`
+  change to `configs/transcription.yaml` (this was the previously-uncommitted
+  change noted in earlier versions of this doc — now committed).
+- `4ffaff9 Scaffold Phase 3 transcription stage (faster-whisper)` — adds
+  `src/transcription/`.
+- `9bf96de Harden Phase 1 acquisition and implement Phase 2 audio extraction`
+  — Phase 1 hardening (mode-aware dedup, history migration, audio-only
+  quality selector) and the full Phase 2 implementation.
+
+`data/raw/` and `data/transcripts/` are both gitignored, so none of the
+downloaded media/metadata/history/transcript files are tracked in git —
+only source code, configs, and the notebook.
+
+**Untracked file as of this check**: `notebooks/colab_transcription_v2.ipynb`
+— the executed copy downloaded back from Colab (has cell outputs embedded).
+Not committed; not clear yet whether this should replace/merge into the
+tracked notebook or stay local-only.
 
 **Branch rename (2026-08-01)**: the GitHub repo
 (`DAG-21/PureBillion-Cloner`) had two unrelated branches — `main`
@@ -267,11 +358,13 @@ file") — don't fix this without being asked.
 
 ### Real data collected so far
 
-**Note**: all of this exists only on the original Dell laptop as of
-2026-08-04 (`data/raw/` is gitignored, never synced via git). User is
-manually transferring it to the T1000 GPU machine — see session log above.
-Confirm it actually landed there before assuming any of this is available
-for the next transcription run.
+**Note**: this was originally acquired on the Dell laptop; as of 2026-08-06,
+`data/raw/audio/` (199 files) is also present on the T1000 machine (manually
+transferred via a Google Drive zip — see "Phase 3 completion" above), along
+with `data/transcripts/` (199 transcript JSONs, now fully populated). Both
+directories are still gitignored, so this is only guaranteed to exist on
+whichever machine(s) it's been manually copied to, not automatically synced
+anywhere — confirm before assuming availability on a new/different machine.
 
 - 1 video+audio download: `lNw1Ts_vO9A.mp4` (~15MB) in `data/raw/videos/`
 - 199 audio-only downloads in `data/raw/audio/`, across 6 playlists/videos:
@@ -300,37 +393,43 @@ for the next transcription run.
 - Test suite is stale/broken (see above) — not being maintained right now
   per explicit user instruction
 - No transcript/caption fetching — Phase 1 is video+metadata only
-- Stages 4–11 (diarization through serving) are unimplemented stubs; Phase 3
-  (transcription) is scaffolded but has never been run for real (see above)
+- Stages 4–11 (diarization through serving) are unimplemented stubs. Phase 3
+  (transcription) is now complete (see above) — Phase 4 (diarization) is the
+  next real implementation work.
 - No `.env` filled in yet (only `.env.example` exists)
 - Target public figure so far is Sadhguru (based on videos downloaded), but
   this hasn't been explicitly confirmed as *the* project target — worth
   double-checking before scaling up acquisition
+- `notebooks/colab_transcription.ipynb`'s full-run cell doesn't pass
+  `--history-file` (unlike its benchmark cell) — see "Known gap" note in
+  Phase 3 completion above.
 
 ## Likely next steps
 
-1. **Resolve the hardware discrepancy** (see flag near the top): is the
+1. **Start Phase 4 (diarization)**: `src/diarization/` is still an empty
+   stub. Needs pyannote.audio wired up to separate speakers per file and
+   isolate the target speaker, using `data/transcripts/*.json` (word-level
+   timestamps) for alignment. Check pyannote's VRAM needs against the T1000's
+   4GB before assuming it'll run there the same way faster-whisper did.
+2. **Resolve the hardware discrepancy** (see flag near the top): is the
    T1000 (4GB VRAM) the real long-term GPU machine, or is there still a
    separate 128GB RAM / A4000 (16GB VRAM) machine this should run on
-   instead? This materially changes what's feasible for stages 4/7/9/11.
-2. Confirm `data/raw/` finished transferring onto the T1000 machine, then
-   run the Phase 3 benchmark (single file → RTF → extrapolate) and the real
-   `python -m src.transcription.transcribe` batch — see GPU machine session
-   log above for the exact plan. This is the first real (non-dry-run) use
-   of Phase 3.
-3. Commit the pending `configs/transcription.yaml` change (see Git state
-   above) once back in a session with git access on that machine.
-4. Run a real ffmpeg extraction against a video that doesn't already have
+   instead? This materially changes what's feasible for stages 4/7/9/11 —
+   Phase 3 working on the T1000 doesn't mean the heavier later stages will.
+3. Run a real ffmpeg extraction against a video that doesn't already have
    audio downloaded separately, to validate Phase 2 end-to-end on real
    (non-scratch) data — currently only verified via a scratch-directory test.
-5. Confirm the target public figure / source channel(s) before acquiring
+4. Confirm the target public figure / source channel(s) before acquiring
    more data at scale (everything downloaded so far is Sadhguru content).
-6. Decide whether to delete the orphaned `origin/master` branch on GitHub.
-7. Decide on a base model for fine-tuning/serving (stages 9 & 11) — nothing
+5. Decide whether to delete the orphaned `origin/master` branch on GitHub.
+6. Decide on a base model for fine-tuning/serving (stages 9 & 11) — nothing
    picked yet, and now depends on resolving the hardware question above:
    16GB VRAM (A4000) comfortably fits a 7B-class model via QLoRA, tighter
    for 13B; 4GB (T1000) would not be viable for fine-tuning or serving any
    realistic base model at all.
+7. Decide what to do with the untracked `notebooks/colab_transcription_v2.ipynb`
+   (see Git state above) and fix the `--history-file` gap in the tracked
+   notebook if it'll be reused for Phase 4 or later GPU-heavy stages.
 
 ---
 *Update this file whenever a phase is completed, the architecture changes,
