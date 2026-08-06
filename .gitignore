@@ -1,6 +1,7 @@
 # raw / intermediate data
 data/raw/
 data/transcripts/
+data/transcripts_txt/
 data/diarized/
 data/references/
 *.wav
