@@ -1,0 +1,1139 @@
+{
+  "num_scored": 122,
+  "missing_transcript": 0,
+  "empty_reference": 0,
+  "corpus_stats": {
+    "wer": {
+      "mean": 0.07234222656091982,
+      "median": 0.060195799404432496,
+      "min": 0.0037735849056603774,
+      "max": 0.24082363473589974,
+      "p10": 0.029120414129646315,
+      "p90": 0.14620738148759232
+    },
+    "cer": {
+      "mean": 0.04666376731864055,
+      "median": 0.0337578615294012,
+      "min": 0.0019639934533551553,
+      "max": 0.24714254906189345,
+      "p10": 0.013232235209762782,
+      "p90": 0.0997834596759888
+    },
+    "mer": {
+      "mean": 0.06997709601910275,
+      "median": 0.059331460634605496,
+      "min": 0.0037735849056603774,
+      "max": 0.2335928809788654,
+      "p10": 0.02894993894993895,
+      "p90": 0.14253442889162748
+    },
+    "wil": {
+      "mean": 0.09510899855351616,
+      "median": 0.08290150353455183,
+      "min": 0.005656810643078769,
+      "max": 0.3450590531272124,
+      "p10": 0.037999595879097646,
+      "p90": 0.18738093500298741
+    }
+  },
+  "files": [
+    {
+      "video_id": "0KezzzN3-4s",
+      "reference_word_count": 690,
+      "hypothesis_word_count": 674,
+      "wer": 0.08076358296622614,
+      "cer": 0.060520361990950226,
+      "mer": 0.07902298850574713,
+      "wil": 0.09406984076587599
+    },
+    {
+      "video_id": "0hSCclbhNN4",
+      "reference_word_count": 688,
+      "hypothesis_word_count": 688,
+      "wer": 0.03560830860534125,
+      "cer": 0.0243535778713169,
+      "mer": 0.035036496350364967,
+      "wil": 0.04528609449224952
+    },
+    {
+      "video_id": "1dwEdhM0YsM",
+      "reference_word_count": 635,
+      "hypothesis_word_count": 639,
+      "wer": 0.0732484076433121,
+      "cer": 0.052647689011325376,
+      "mer": 0.07109737248840804,
+      "wil": 0.09990480747186592
+    },
+    {
+      "video_id": "1kKGzCL4D5w",
+      "reference_word_count": 5211,
+      "hypothesis_word_count": 5319,
+      "wer": 0.06240340030911901,
+      "cer": 0.03846709528281442,
+      "mer": 0.06044161676646707,
+      "wil": 0.08118437744824913
+    },
+    {
+      "video_id": "2DW9Sq41ffY",
+      "reference_word_count": 675,
+      "hypothesis_word_count": 687,
+      "wer": 0.08370702541106129,
+      "cer": 0.06020436343551505,
+      "mer": 0.08034433285509325,
+      "wil": 0.10339868853174472
+    },
+    {
+      "video_id": "2qbKcuTKrDI",
+      "reference_word_count": 1271,
+      "hypothesis_word_count": 1242,
+      "wer": 0.0698967434471803,
+      "cer": 0.0442572741194487,
+      "mer": 0.06901960784313725,
+      "wil": 0.09893916778262535
+    },
+    {
+      "video_id": "32brcqoNa7Q",
+      "reference_word_count": 8813,
+      "hypothesis_word_count": 9123,
+      "wer": 0.23082191780821917,
+      "cer": 0.1809161014587011,
+      "mer": 0.2177002583979328,
+      "wil": 0.3391668168709445
+    },
+    {
+      "video_id": "4Fl_Dxk4Z7s",
+      "reference_word_count": 497,
+      "hypothesis_word_count": 419,
+      "wer": 0.20486815415821502,
+      "cer": 0.18555466879489227,
+      "mer": 0.202,
+      "wil": 0.22930090479118148
+    },
+    {
+      "video_id": "4Hqx80w6nTI",
+      "reference_word_count": 1211,
+      "hypothesis_word_count": 1256,
+      "wer": 0.11681855840927921,
+      "cer": 0.08448664306404892,
+      "mer": 0.10998439937597504,
+      "wil": 0.1412349141684125
+    },
+    {
+      "video_id": "5up0Ma8BhxA",
+      "reference_word_count": 131,
+      "hypothesis_word_count": 130,
+      "wer": 0.022900763358778626,
+      "cer": 0.00980392156862745,
+      "mer": 0.022900763358778626,
+      "wil": 0.03793305930710511
+    },
+    {
+      "video_id": "5wnkFYztI4c",
+      "reference_word_count": 1945,
+      "hypothesis_word_count": 1962,
+      "wer": 0.0257201646090535,
+      "cer": 0.010829969479176922,
+      "mer": 0.0254323499491353,
+      "wil": 0.03603711476208782
+    },
+    {
+      "video_id": "5z855Z2iFwI",
+      "reference_word_count": 1464,
+      "hypothesis_word_count": 1496,
+      "wer": 0.06164383561643835,
+      "cer": 0.025992499676710204,
+      "mer": 0.05992010652463382,
+      "wil": 0.08718042634239243
+    },
+    {
+      "video_id": "7EM3jeSvdBI",
+      "reference_word_count": 687,
+      "hypothesis_word_count": 690,
+      "wer": 0.04817518248175182,
+      "cer": 0.032935004371903234,
+      "mer": 0.04721030042918455,
+      "wil": 0.061555061885115836
+    },
+    {
+      "video_id": "7NiFLt3xT1w",
+      "reference_word_count": 752,
+      "hypothesis_word_count": 746,
+      "wer": 0.08388814913448735,
+      "cer": 0.0707808564231738,
+      "mer": 0.08139534883720931,
+      "wil": 0.09768030472328237
+    },
+    {
+      "video_id": "7e_w0TlBe9k",
+      "reference_word_count": 811,
+      "hypothesis_word_count": 803,
+      "wer": 0.09725685785536159,
+      "cer": 0.05249937201708114,
+      "mer": 0.09466019417475728,
+      "wil": 0.12825348688580052
+    },
+    {
+      "video_id": "95PTpYlW6aM",
+      "reference_word_count": 1743,
+      "hypothesis_word_count": 1781,
+      "wer": 0.09735023041474654,
+      "cer": 0.07764811490125673,
+      "mer": 0.09275521405049396,
+      "wil": 0.11624462775275113
+    },
+    {
+      "video_id": "9V6UCCZF0yA",
+      "reference_word_count": 958,
+      "hypothesis_word_count": 896,
+      "wer": 0.1385606874328679,
+      "cer": 0.08753148614609572,
+      "mer": 0.13479623824451412,
+      "wil": 0.17813027466625742
+    },
+    {
+      "video_id": "9ZYaMTJD81I",
+      "reference_word_count": 2388,
+      "hypothesis_word_count": 2356,
+      "wer": 0.031342651418890304,
+      "cer": 0.013624192786265553,
+      "mer": 0.031118587047939444,
+      "wil": 0.04365116468863173
+    },
+    {
+      "video_id": "9c6U_iZ3qBg",
+      "reference_word_count": 519,
+      "hypothesis_word_count": 518,
+      "wer": 0.025096525096525095,
+      "cer": 0.010135135135135136,
+      "mer": 0.02495201535508637,
+      "wil": 0.03637707893027042
+    },
+    {
+      "video_id": "A9LFgp39h8I",
+      "reference_word_count": 1707,
+      "hypothesis_word_count": 1732,
+      "wer": 0.0599406528189911,
+      "cer": 0.039723661485319514,
+      "mer": 0.058012636415852956,
+      "wil": 0.07412889767086417
+    },
+    {
+      "video_id": "AJBuqPC-F-w",
+      "reference_word_count": 448,
+      "hypothesis_word_count": 466,
+      "wer": 0.04044943820224719,
+      "cer": 0.028409090909090908,
+      "mer": 0.0392156862745098,
+      "wil": 0.047851949768671576
+    },
+    {
+      "video_id": "C_xsXnRd_uc",
+      "reference_word_count": 544,
+      "hypothesis_word_count": 473,
+      "wer": 0.1589648798521257,
+      "cer": 0.14988595633756924,
+      "mer": 0.1577981651376147,
+      "wil": 0.17493890786052202
+    },
+    {
+      "video_id": "CmVQuiT0OTw",
+      "reference_word_count": 460,
+      "hypothesis_word_count": 483,
+      "wer": 0.10217391304347827,
+      "cer": 0.06398005816368924,
+      "mer": 0.09611451942740286,
+      "wil": 0.12069493203708703
+    },
+    {
+      "video_id": "Cz2NOxarkMs",
+      "reference_word_count": 1575,
+      "hypothesis_word_count": 1608,
+      "wer": 0.07265774378585087,
+      "cer": 0.040072639225181596,
+      "mer": 0.07019704433497537,
+      "wil": 0.09400335998753906
+    },
+    {
+      "video_id": "DHS3tMFrmuA",
+      "reference_word_count": 911,
+      "hypothesis_word_count": 913,
+      "wer": 0.03634361233480176,
+      "cer": 0.012133891213389121,
+      "mer": 0.03598691384950927,
+      "wil": 0.056321972331710324
+    },
+    {
+      "video_id": "DVWh7OgBkTc",
+      "reference_word_count": 1755,
+      "hypothesis_word_count": 1801,
+      "wer": 0.05416191562143672,
+      "cer": 0.027196418578623392,
+      "mer": 0.05260243632336656,
+      "wil": 0.07223226130315663
+    },
+    {
+      "video_id": "Dl8MUnLfEsk",
+      "reference_word_count": 1331,
+      "hypothesis_word_count": 1354,
+      "wer": 0.07530120481927711,
+      "cer": 0.03961549665016021,
+      "mer": 0.072992700729927,
+      "wil": 0.09967892325417305
+    },
+    {
+      "video_id": "DuVsPLOGz14",
+      "reference_word_count": 1882,
+      "hypothesis_word_count": 1858,
+      "wer": 0.06336528221512247,
+      "cer": 0.0337,
+      "mer": 0.0625,
+      "wil": 0.08686467636711293
+    },
+    {
+      "video_id": "E8HR3LSUXrk",
+      "reference_word_count": 13911,
+      "hypothesis_word_count": 14197,
+      "wer": 0.07085987261146497,
+      "cer": 0.044370337632421285,
+      "mer": 0.06830391404451266,
+      "wil": 0.0894215841561915
+    },
+    {
+      "video_id": "ECuLFzPhpD4",
+      "reference_word_count": 451,
+      "hypothesis_word_count": 445,
+      "wer": 0.05203619909502263,
+      "cer": 0.0253690036900369,
+      "mer": 0.05133928571428571,
+      "wil": 0.07544378698224852
+    },
+    {
+      "video_id": "Esyx5BC6Z9U",
+      "reference_word_count": 6124,
+      "hypothesis_word_count": 6195,
+      "wer": 0.057156894857517196,
+      "cer": 0.03758699207850935,
+      "mer": 0.05595638928972262,
+      "wil": 0.07962665519518819
+    },
+    {
+      "video_id": "EyWzaR9mt70",
+      "reference_word_count": 1356,
+      "hypothesis_word_count": 1324,
+      "wer": 0.05925925925925926,
+      "cer": 0.023430962343096235,
+      "mer": 0.058997050147492625,
+      "wil": 0.08701264474163783
+    },
+    {
+      "video_id": "F065fgDq1NE",
+      "reference_word_count": 539,
+      "hypothesis_word_count": 540,
+      "wer": 0.03377110694183865,
+      "cer": 0.018272425249169437,
+      "mer": 0.033271719038817,
+      "wil": 0.04611967051898147
+    },
+    {
+      "video_id": "F5378Ag9EjA",
+      "reference_word_count": 722,
+      "hypothesis_word_count": 793,
+      "wer": 0.23783031988873435,
+      "cer": 0.11563218390804597,
+      "mer": 0.21536523929471033,
+      "wil": 0.31841186552591283
+    },
+    {
+      "video_id": "GBsXZ7iHSd8",
+      "reference_word_count": 503,
+      "hypothesis_word_count": 508,
+      "wer": 0.05389221556886228,
+      "cer": 0.030148786217697728,
+      "mer": 0.05283757338551859,
+      "wil": 0.07957313719018655
+    },
+    {
+      "video_id": "GzjbmMNxvTY",
+      "reference_word_count": 1007,
+      "hypothesis_word_count": 1018,
+      "wer": 0.12236710130391174,
+      "cer": 0.09294931737422854,
+      "mer": 0.11553030303030302,
+      "wil": 0.1396450906307911
+    },
+    {
+      "video_id": "HABbAHdfdXk",
+      "reference_word_count": 1474,
+      "hypothesis_word_count": 1509,
+      "wer": 0.11065292096219931,
+      "cer": 0.0839331619537275,
+      "mer": 0.10420711974110032,
+      "wil": 0.1275913818349923
+    },
+    {
+      "video_id": "HSLBSDuQWa8",
+      "reference_word_count": 11192,
+      "hypothesis_word_count": 11358,
+      "wer": 0.05106611718330049,
+      "cer": 0.03895368210596468,
+      "mer": 0.04969918911849333,
+      "wil": 0.06120352606515944
+    },
+    {
+      "video_id": "He8SX-BzcIY",
+      "reference_word_count": 226,
+      "hypothesis_word_count": 224,
+      "wer": 0.03111111111111111,
+      "cer": 0.007685738684884714,
+      "mer": 0.03111111111111111,
+      "wil": 0.05706349206349204
+    },
+    {
+      "video_id": "IH23o77OZXw",
+      "reference_word_count": 267,
+      "hypothesis_word_count": 274,
+      "wer": 0.03759398496240601,
+      "cer": 0.02779708130646282,
+      "mer": 0.0364963503649635,
+      "wil": 0.04374073870808404
+    },
+    {
+      "video_id": "Ipyi_bjJnvg",
+      "reference_word_count": 1283,
+      "hypothesis_word_count": 1293,
+      "wer": 0.07291666666666667,
+      "cer": 0.040018758793184304,
+      "mer": 0.07043343653250773,
+      "wil": 0.09280217264420554
+    },
+    {
+      "video_id": "Iw7qe6nNNv8",
+      "reference_word_count": 1149,
+      "hypothesis_word_count": 1166,
+      "wer": 0.051573426573426576,
+      "cer": 0.03379161835348683,
+      "mer": 0.05029838022165388,
+      "wil": 0.06805265181553843
+    },
+    {
+      "video_id": "IzlIfzj6xfo",
+      "reference_word_count": 1119,
+      "hypothesis_word_count": 1195,
+      "wer": 0.24082363473589974,
+      "cer": 0.10271237780531461,
+      "mer": 0.223421926910299,
+      "wil": 0.3450590531272124
+    },
+    {
+      "video_id": "JWirS0eyhkQ",
+      "reference_word_count": 664,
+      "hypothesis_word_count": 661,
+      "wer": 0.0634441087613293,
+      "cer": 0.021820269882285387,
+      "mer": 0.06259314456035768,
+      "wil": 0.09584717835742784
+    },
+    {
+      "video_id": "KBLh-avE-88",
+      "reference_word_count": 1117,
+      "hypothesis_word_count": 1127,
+      "wer": 0.039461883408071746,
+      "cer": 0.02069313593539704,
+      "mer": 0.03880070546737213,
+      "wil": 0.053676253892902315
+    },
+    {
+      "video_id": "L6nOYHTefow",
+      "reference_word_count": 901,
+      "hypothesis_word_count": 926,
+      "wer": 0.15670800450958286,
+      "cer": 0.08649289099526067,
+      "mer": 0.14802981895633652,
+      "wil": 0.2199640452177093
+    },
+    {
+      "video_id": "LfdJS_8M8bY",
+      "reference_word_count": 502,
+      "hypothesis_word_count": 519,
+      "wer": 0.06772908366533864,
+      "cer": 0.054924935920908094,
+      "mer": 0.06513409961685823,
+      "wil": 0.08595291281885942
+    },
+    {
+      "video_id": "MwgkvBZXum0",
+      "reference_word_count": 18220,
+      "hypothesis_word_count": 18039,
+      "wer": 0.05158376087441446,
+      "cer": 0.032030230306092373,
+      "mer": 0.0506155950752394,
+      "wil": 0.06723957549571025
+    },
+    {
+      "video_id": "NUTtUP_1jns",
+      "reference_word_count": 874,
+      "hypothesis_word_count": 886,
+      "wer": 0.09573241061130335,
+      "cer": 0.05805609915198956,
+      "mer": 0.0918141592920354,
+      "wil": 0.12054230795325838
+    },
+    {
+      "video_id": "NxqRLjWscik",
+      "reference_word_count": 411,
+      "hypothesis_word_count": 409,
+      "wer": 0.031630170316301706,
+      "cer": 0.018636586562040217,
+      "mer": 0.03155339805825243,
+      "wil": 0.0506118505796479
+    },
+    {
+      "video_id": "O92iByYqgaw",
+      "reference_word_count": 947,
+      "hypothesis_word_count": 913,
+      "wer": 0.12059765208110992,
+      "cer": 0.08637349635180437,
+      "mer": 0.11721991701244813,
+      "wil": 0.15252930217753569
+    },
+    {
+      "video_id": "P7w01SFudeA",
+      "reference_word_count": 570,
+      "hypothesis_word_count": 592,
+      "wer": 0.07760141093474426,
+      "cer": 0.024092409240924092,
+      "mer": 0.07432432432432433,
+      "wil": 0.1053434386767721
+    },
+    {
+      "video_id": "PHvHMiPiKao",
+      "reference_word_count": 1950,
+      "hypothesis_word_count": 1953,
+      "wer": 0.049019607843137254,
+      "cer": 0.02367975944371359,
+      "mer": 0.04819888381532217,
+      "wil": 0.0701569441207911
+    },
+    {
+      "video_id": "Q1K9uN7z1Js",
+      "reference_word_count": 100,
+      "hypothesis_word_count": 99,
+      "wer": 0.17,
+      "cer": 0.13570274636510501,
+      "mer": 0.16831683168316833,
+      "wil": 0.28727272727272724
+    },
+    {
+      "video_id": "QEtjob__Fc0",
+      "reference_word_count": 1614,
+      "hypothesis_word_count": 1585,
+      "wer": 0.03954802259887006,
+      "cer": 0.014320987654320988,
+      "mer": 0.03935040599625234,
+      "wil": 0.058999408852258406
+    },
+    {
+      "video_id": "RjXCSSlKtkI",
+      "reference_word_count": 530,
+      "hypothesis_word_count": 529,
+      "wer": 0.0037735849056603774,
+      "cer": 0.0019639934533551553,
+      "mer": 0.0037735849056603774,
+      "wil": 0.005656810643078769
+    },
+    {
+      "video_id": "SAnUTDJ-DIY",
+      "reference_word_count": 315,
+      "hypothesis_word_count": 309,
+      "wer": 0.019417475728155338,
+      "cer": 0.013824884792626729,
+      "mer": 0.019417475728155338,
+      "wil": 0.022643076136944273
+    },
+    {
+      "video_id": "SKwLz6aI3aU",
+      "reference_word_count": 285,
+      "hypothesis_word_count": 288,
+      "wer": 0.024734982332155476,
+      "cer": 0.013793103448275862,
+      "mer": 0.024305555555555556,
+      "wil": 0.031200922654102903
+    },
+    {
+      "video_id": "TGsmCy8vXU4",
+      "reference_word_count": 486,
+      "hypothesis_word_count": 466,
+      "wer": 0.07660455486542443,
+      "cer": 0.017564870259481037,
+      "mer": 0.07644628099173553,
+      "wil": 0.11226774718097732
+    },
+    {
+      "video_id": "UFjNPvgAosw",
+      "reference_word_count": 820,
+      "hypothesis_word_count": 818,
+      "wer": 0.04187192118226601,
+      "cer": 0.027089072543617997,
+      "mer": 0.04116222760290557,
+      "wil": 0.05447660852210712
+    },
+    {
+      "video_id": "UPmhk_h_y9w",
+      "reference_word_count": 780,
+      "hypothesis_word_count": 774,
+      "wer": 0.028350515463917526,
+      "cer": 0.015,
+      "mer": 0.028205128205128206,
+      "wil": 0.043388209595354166
+    },
+    {
+      "video_id": "UVHPLS9UKSM",
+      "reference_word_count": 434,
+      "hypothesis_word_count": 434,
+      "wer": 0.03271028037383177,
+      "cer": 0.018775145283862316,
+      "mer": 0.03218390804597701,
+      "wil": 0.04140165282104524
+    },
+    {
+      "video_id": "VUYFiWdAj2A",
+      "reference_word_count": 753,
+      "hypothesis_word_count": 736,
+      "wer": 0.06301369863013699,
+      "cer": 0.034436373419424265,
+      "mer": 0.06191117092866756,
+      "wil": 0.08711689873536643
+    },
+    {
+      "video_id": "VXc43GJ4bXY",
+      "reference_word_count": 2948,
+      "hypothesis_word_count": 2934,
+      "wer": 0.07938671209540034,
+      "cer": 0.05115240659268501,
+      "mer": 0.07771847898599066,
+      "wil": 0.11188316466967263
+    },
+    {
+      "video_id": "VrfvJhnUxR8",
+      "reference_word_count": 743,
+      "hypothesis_word_count": 721,
+      "wer": 0.043243243243243246,
+      "cer": 0.036131774707757705,
+      "mer": 0.04306864064602961,
+      "wil": 0.05119932432432428
+    },
+    {
+      "video_id": "X-yC18V5H-U",
+      "reference_word_count": 904,
+      "hypothesis_word_count": 877,
+      "wer": 0.061016949152542375,
+      "cer": 0.04345945945945946,
+      "mer": 0.060066740823136816,
+      "wil": 0.07369930010962134
+    },
+    {
+      "video_id": "YSDhcG1Ww_Y",
+      "reference_word_count": 330,
+      "hypothesis_word_count": 326,
+      "wer": 0.0701219512195122,
+      "cer": 0.026635784597568036,
+      "mer": 0.06948640483383686,
+      "wil": 0.107347184582957
+    },
+    {
+      "video_id": "YgI5Owxqwts",
+      "reference_word_count": 724,
+      "hypothesis_word_count": 733,
+      "wer": 0.07053941908713693,
+      "cer": 0.03403075371817494,
+      "mer": 0.06864064602960969,
+      "wil": 0.09641311875069569
+    },
+    {
+      "video_id": "Yv6eNmb2Ljo",
+      "reference_word_count": 514,
+      "hypothesis_word_count": 504,
+      "wer": 0.04892367906066536,
+      "cer": 0.02356518434055492,
+      "mer": 0.04844961240310078,
+      "wil": 0.063923057807598
+    },
+    {
+      "video_id": "ZJQSF-uEQhw",
+      "reference_word_count": 1783,
+      "hypothesis_word_count": 1791,
+      "wer": 0.03367003367003367,
+      "cer": 0.028796884607501537,
+      "mer": 0.03320420586607637,
+      "wil": 0.0431913799697784
+    },
+    {
+      "video_id": "_f7xDWZzn4c",
+      "reference_word_count": 665,
+      "hypothesis_word_count": 627,
+      "wer": 0.10518292682926829,
+      "cer": 0.07064760302775441,
+      "mer": 0.1031390134529148,
+      "wil": 0.12475201307036987
+    },
+    {
+      "video_id": "b5cyE4qEb2w",
+      "reference_word_count": 420,
+      "hypothesis_word_count": 409,
+      "wer": 0.05995203836930456,
+      "cer": 0.014492753623188406,
+      "mer": 0.059665871121718374,
+      "wil": 0.08980786031321641
+    },
+    {
+      "video_id": "bGObTk05_dQ",
+      "reference_word_count": 273,
+      "hypothesis_word_count": 280,
+      "wer": 0.17279411764705882,
+      "cer": 0.1474793077501881,
+      "mer": 0.16040955631399317,
+      "wil": 0.20256166982922197
+    },
+    {
+      "video_id": "bSKSWbWkneE",
+      "reference_word_count": 1256,
+      "hypothesis_word_count": 1257,
+      "wer": 0.0645682001614205,
+      "cer": 0.037408759124087594,
+      "mer": 0.06279434850863422,
+      "wil": 0.08461862962085454
+    },
+    {
+      "video_id": "bzx0nynHIzs",
+      "reference_word_count": 887,
+      "hypothesis_word_count": 727,
+      "wer": 0.23917995444191345,
+      "cer": 0.24714254906189345,
+      "mer": 0.2335928809788654,
+      "wil": 0.2511294871875769
+    },
+    {
+      "video_id": "dGULOR0qOjA",
+      "reference_word_count": 430,
+      "hypothesis_word_count": 437,
+      "wer": 0.08235294117647059,
+      "cer": 0.061010486177311724,
+      "mer": 0.07972665148063782,
+      "wil": 0.10271577789994502
+    },
+    {
+      "video_id": "dUilx0K-iBk",
+      "reference_word_count": 1023,
+      "hypothesis_word_count": 1038,
+      "wer": 0.050049067713444556,
+      "cer": 0.0345015434901035,
+      "mer": 0.04866412213740458,
+      "wil": 0.06023605446421654
+    },
+    {
+      "video_id": "diFkCJ802vY",
+      "reference_word_count": 561,
+      "hypothesis_word_count": 560,
+      "wer": 0.01618705035971223,
+      "cer": 0.007309432648799165,
+      "mer": 0.01607142857142857,
+      "wil": 0.01966792813505036
+    },
+    {
+      "video_id": "dvJYn08oLRg",
+      "reference_word_count": 1506,
+      "hypothesis_word_count": 1538,
+      "wer": 0.03386454183266932,
+      "cer": 0.027917845283482966,
+      "mer": 0.03300970873786408,
+      "wil": 0.035721784300663306
+    },
+    {
+      "video_id": "e2EPuGabgpc",
+      "reference_word_count": 722,
+      "hypothesis_word_count": 752,
+      "wer": 0.08044382801664356,
+      "cer": 0.0425974025974026,
+      "mer": 0.07692307692307693,
+      "wil": 0.10656003777259715
+    },
+    {
+      "video_id": "e6xOvcmJgrk",
+      "reference_word_count": 1206,
+      "hypothesis_word_count": 1204,
+      "wer": 0.05016722408026756,
+      "cer": 0.03372410470531556,
+      "mer": 0.04926108374384237,
+      "wil": 0.06253565396360217
+    },
+    {
+      "video_id": "ekk8xyLAXqM",
+      "reference_word_count": 2096,
+      "hypothesis_word_count": 2052,
+      "wer": 0.050724637681159424,
+      "cer": 0.030628296474507263,
+      "mer": 0.05019120458891013,
+      "wil": 0.06823252597768859
+    },
+    {
+      "video_id": "fU_7bcpuYaA",
+      "reference_word_count": 456,
+      "hypothesis_word_count": 450,
+      "wer": 0.044444444444444446,
+      "cer": 0.027340513670256836,
+      "mer": 0.0437636761487965,
+      "wil": 0.05694320987654311
+    },
+    {
+      "video_id": "fWFon7aNU_Q",
+      "reference_word_count": 1175,
+      "hypothesis_word_count": 1162,
+      "wer": 0.06970740103270223,
+      "cer": 0.03717654765804127,
+      "mer": 0.06841216216216216,
+      "wil": 0.09429437969376264
+    },
+    {
+      "video_id": "gSkh6oRH6Vw",
+      "reference_word_count": 1424,
+      "hypothesis_word_count": 1465,
+      "wer": 0.059030217849613494,
+      "cer": 0.038945555702742087,
+      "mer": 0.056910569105691054,
+      "wil": 0.0679840288830752
+    },
+    {
+      "video_id": "hjrbb94z2WI",
+      "reference_word_count": 1134,
+      "hypothesis_word_count": 1132,
+      "wer": 0.03359858532272325,
+      "cer": 0.019016618125749528,
+      "mer": 0.033391915641476276,
+      "wil": 0.054067470787492855
+    },
+    {
+      "video_id": "hrZJONSxIBM",
+      "reference_word_count": 642,
+      "hypothesis_word_count": 653,
+      "wer": 0.178125,
+      "cer": 0.12409167132476244,
+      "mer": 0.17040358744394618,
+      "wil": 0.2629570252679938
+    },
+    {
+      "video_id": "hzvT0vy5cjE",
+      "reference_word_count": 1385,
+      "hypothesis_word_count": 1314,
+      "wer": 0.09064539521392313,
+      "cer": 0.07354586129753915,
+      "mer": 0.08954154727793696,
+      "wil": 0.10643912805629163
+    },
+    {
+      "video_id": "iOwWGPhxSH4",
+      "reference_word_count": 948,
+      "hypothesis_word_count": 948,
+      "wer": 0.04472843450479233,
+      "cer": 0.019691433211530655,
+      "mer": 0.04407135362014691,
+      "wil": 0.06472494097627213
+    },
+    {
+      "video_id": "l1D1noCgZ68",
+      "reference_word_count": 1597,
+      "hypothesis_word_count": 1673,
+      "wer": 0.08140262993112085,
+      "cer": 0.060904872389791184,
+      "mer": 0.07705986959098993,
+      "wil": 0.09264681498970162
+    },
+    {
+      "video_id": "lBk8ztCTAnQ",
+      "reference_word_count": 934,
+      "hypothesis_word_count": 919,
+      "wer": 0.05652173913043478,
+      "cer": 0.03272951832029642,
+      "mer": 0.05591397849462366,
+      "wil": 0.07718348975292089
+    },
+    {
+      "video_id": "lJCUC0mRkPo",
+      "reference_word_count": 1172,
+      "hypothesis_word_count": 1189,
+      "wer": 0.14948453608247422,
+      "cer": 0.1295671725688589,
+      "mer": 0.14585079631181894,
+      "wil": 0.2497369934595186
+    },
+    {
+      "video_id": "liLMxqCpzuI",
+      "reference_word_count": 967,
+      "hypothesis_word_count": 965,
+      "wer": 0.06743940990516333,
+      "cer": 0.031857031857031856,
+      "mer": 0.06570841889117043,
+      "wil": 0.0919846620957051
+    },
+    {
+      "video_id": "mjWU9l1mWsU",
+      "reference_word_count": 890,
+      "hypothesis_word_count": 889,
+      "wer": 0.04104903078677309,
+      "cer": 0.027831299507600087,
+      "mer": 0.04017857142857143,
+      "wil": 0.05137285433391525
+    },
+    {
+      "video_id": "mlu9GeNiwuM",
+      "reference_word_count": 428,
+      "hypothesis_word_count": 434,
+      "wer": 0.05152224824355972,
+      "cer": 0.032116146062472505,
+      "mer": 0.05034324942791762,
+      "wil": 0.07065152872359948
+    },
+    {
+      "video_id": "ndMz7LiSRhw",
+      "reference_word_count": 1421,
+      "hypothesis_word_count": 1440,
+      "wer": 0.04301833568406206,
+      "cer": 0.028761929664008368,
+      "mer": 0.04209799861973775,
+      "wil": 0.054533961895619765
+    },
+    {
+      "video_id": "ng9pFkb3nko",
+      "reference_word_count": 313,
+      "hypothesis_word_count": 309,
+      "wer": 0.03215434083601286,
+      "cer": 0.006336405529953917,
+      "mer": 0.03205128205128205,
+      "wil": 0.05093705449588448
+    },
+    {
+      "video_id": "o3C7pz8E_9c",
+      "reference_word_count": 2237,
+      "hypothesis_word_count": 2203,
+      "wer": 0.05563093622795115,
+      "cer": 0.029903787813122997,
+      "mer": 0.05493523894595802,
+      "wil": 0.07908964829003118
+    },
+    {
+      "video_id": "oMoNZZoCJIY",
+      "reference_word_count": 403,
+      "hypothesis_word_count": 401,
+      "wer": 0.020100502512562814,
+      "cer": 0.013313609467455622,
+      "mer": 0.0199501246882793,
+      "wil": 0.032262309051491855
+    },
+    {
+      "video_id": "ocb3iXapD1k",
+      "reference_word_count": 721,
+      "hypothesis_word_count": 801,
+      "wer": 0.18802228412256267,
+      "cer": 0.13762730525736305,
+      "mer": 0.16584766584766586,
+      "wil": 0.1983540769024792
+    },
+    {
+      "video_id": "oupppoVp3Dk",
+      "reference_word_count": 525,
+      "hypothesis_word_count": 520,
+      "wer": 0.025193798449612403,
+      "cer": 0.009419743782969104,
+      "mer": 0.02495201535508637,
+      "wil": 0.03450959264912756
+    },
+    {
+      "video_id": "p_Ne6mQH40E",
+      "reference_word_count": 495,
+      "hypothesis_word_count": 500,
+      "wer": 0.02636916835699797,
+      "cer": 0.013071895424836602,
+      "mer": 0.026,
+      "wil": 0.0378539553752536
+    },
+    {
+      "video_id": "q5m6tMjcF8k",
+      "reference_word_count": 943,
+      "hypothesis_word_count": 930,
+      "wer": 0.03091684434968017,
+      "cer": 0.02433758586849853,
+      "mer": 0.030687830687830688,
+      "wil": 0.03815484788041357
+    },
+    {
+      "video_id": "qdVJsJJXPtY",
+      "reference_word_count": 867,
+      "hypothesis_word_count": 854,
+      "wer": 0.07523148148148148,
+      "cer": 0.036036036036036036,
+      "mer": 0.07428571428571429,
+      "wil": 0.1066176470588236
+    },
+    {
+      "video_id": "rWlX-qDzsyI",
+      "reference_word_count": 1116,
+      "hypothesis_word_count": 1155,
+      "wer": 0.06384892086330936,
+      "cer": 0.04232717764340579,
+      "mer": 0.06147186147186147,
+      "wil": 0.07791881677903745
+    },
+    {
+      "video_id": "r_zQ9xD5n-0",
+      "reference_word_count": 561,
+      "hypothesis_word_count": 576,
+      "wer": 0.07692307692307693,
+      "cer": 0.052025139664804466,
+      "mer": 0.07363013698630137,
+      "wil": 0.09100762770820903
+    },
+    {
+      "video_id": "s2SSedCJ29M",
+      "reference_word_count": 1496,
+      "hypothesis_word_count": 1524,
+      "wer": 0.055667337357478204,
+      "cer": 0.035391566265060244,
+      "mer": 0.054036458333333336,
+      "wil": 0.06966591489365459
+    },
+    {
+      "video_id": "tMKuQZS6GBU",
+      "reference_word_count": 813,
+      "hypothesis_word_count": 807,
+      "wer": 0.019704433497536946,
+      "cer": 0.00563063063063063,
+      "mer": 0.019656019656019656,
+      "wil": 0.028201512626586434
+    },
+    {
+      "video_id": "tP3zyrhIXkw",
+      "reference_word_count": 657,
+      "hypothesis_word_count": 621,
+      "wer": 0.08333333333333333,
+      "cer": 0.06015037593984962,
+      "mer": 0.08244274809160305,
+      "wil": 0.10240104570485675
+    },
+    {
+      "video_id": "uV_CGpMsEhY",
+      "reference_word_count": 183,
+      "hypothesis_word_count": 186,
+      "wer": 0.06043956043956044,
+      "cer": 0.015105740181268883,
+      "mer": 0.058823529411764705,
+      "wil": 0.08495805269998813
+    },
+    {
+      "video_id": "uWAGOjBpO0k",
+      "reference_word_count": 627,
+      "hypothesis_word_count": 634,
+      "wer": 0.046251993620414676,
+      "cer": 0.013197360527894421,
+      "mer": 0.04552590266875981,
+      "wil": 0.06860069893245246
+    },
+    {
+      "video_id": "uZuPHcG0Qnk",
+      "reference_word_count": 599,
+      "hypothesis_word_count": 593,
+      "wer": 0.04215851602023609,
+      "cer": 0.03133074935400517,
+      "mer": 0.04159733777038269,
+      "wil": 0.05651373955279282
+    },
+    {
+      "video_id": "ulQWJH2e4PM",
+      "reference_word_count": 695,
+      "hypothesis_word_count": 689,
+      "wer": 0.03524229074889868,
+      "cer": 0.031146637265711135,
+      "mer": 0.03463203463203463,
+      "wil": 0.0391645413092202
+    },
+    {
+      "video_id": "vgMT8-HOIzA",
+      "reference_word_count": 831,
+      "hypothesis_word_count": 825,
+      "wer": 0.07636363636363637,
+      "cer": 0.06271616324648374,
+      "mer": 0.07491082045184304,
+      "wil": 0.11069384756657485
+    },
+    {
+      "video_id": "vvntRXe6YcU",
+      "reference_word_count": 1049,
+      "hypothesis_word_count": 1144,
+      "wer": 0.11549566891241578,
+      "cer": 0.10286827195467423,
+      "mer": 0.10452961672473868,
+      "wil": 0.11091218694683558
+    },
+    {
+      "video_id": "wHzsmZ5t_K0",
+      "reference_word_count": 1073,
+      "hypothesis_word_count": 1060,
+      "wer": 0.04730368968779565,
+      "cer": 0.03286297809134794,
+      "mer": 0.046468401486988845,
+      "wil": 0.05779642675894103
+    },
+    {
+      "video_id": "wNaFvx68ZwI",
+      "reference_word_count": 574,
+      "hypothesis_word_count": 551,
+      "wer": 0.0375,
+      "cer": 0.021871984560952074,
+      "mer": 0.037366548042704624,
+      "wil": 0.051461628208452126
+    },
+    {
+      "video_id": "wv-aai4rw5I",
+      "reference_word_count": 2008,
+      "hypothesis_word_count": 1989,
+      "wer": 0.12243878060969515,
+      "cer": 0.07150796591330122,
+      "mer": 0.12015693967631191,
+      "wil": 0.19134550371872883
+    },
+    {
+      "video_id": "x8Qn77t19kw",
+      "reference_word_count": 2011,
+      "hypothesis_word_count": 2006,
+      "wer": 0.0699195171026157,
+      "cer": 0.04075389776988356,
+      "mer": 0.06823760432007854,
+      "wil": 0.09622222110719181
+    },
+    {
+      "video_id": "xLXLKl2ajc0",
+      "reference_word_count": 4555,
+      "hypothesis_word_count": 4698,
+      "wer": 0.07849604221635884,
+      "cer": 0.04897261701329554,
+      "mer": 0.0753959873284055,
+      "wil": 0.10256506782096408
+    },
+    {
+      "video_id": "y8HuOycyCT4",
+      "reference_word_count": 893,
+      "hypothesis_word_count": 866,
+      "wer": 0.06955530216647662,
+      "cer": 0.04090706980880391,
+      "mer": 0.0683090705487122,
+      "wil": 0.08855772750374591
+    },
+    {
+      "video_id": "yL_fgyXXnSM",
+      "reference_word_count": 805,
+      "hypothesis_word_count": 802,
+      "wer": 0.058530510585305104,
+      "cer": 0.03212945590994371,
+      "mer": 0.05773955773955774,
+      "wil": 0.08651627469309287
+    }
+  ]
+}

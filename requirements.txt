@@ -1,6 +1,7 @@
 yt-dlp
 pyyaml
 tqdm
+python-dotenv
 ffmpeg-python
 faster-whisper
 pyannote.audio
@@ -16,6 +17,7 @@ bert-score
 rouge-score
 sacrebleu
 ragas
+jiwer
 vllm
 fastapi
 uvicorn

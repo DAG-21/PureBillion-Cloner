@@ -1,2 +1,28 @@
-# Configuration for src/diarization/
-# TODO: define stage-specific parameters
+# Configuration for src/diarization/ (Phase 4: Diarization)
+#
+# All relative paths are resolved against the project root
+# (the directory containing this configs/ folder).
+
+input:
+  audio_dir: data/raw/audio
+  transcripts_dir: data/transcripts     # word-level timestamps used for target-speaker alignment
+
+output:
+  diarized_dir: data/diarized
+  history_file: data/diarized/diarization_history.csv
+
+model:
+  pipeline: pyannote/speaker-diarization-3.1   # gated on HuggingFace -- needs HF_TOKEN in .env
+  device: cuda           # auto | cuda | cpu -- forced to cuda (not auto), same reasoning as
+                          # configs/transcription.yaml: a broken CUDA setup should fail loudly
+                          # at pipeline load instead of silently falling back to CPU
+
+target_speaker:
+  strategy: longest_total_duration   # only strategy implemented so far -- assumes the
+                          # target speaker (Sadhguru) talks the most in every file. Revisit
+                          # with a voice-embedding-match strategy if this heuristic turns out
+                          # wrong on files where an interviewer/host talks more.
+
+logging:
+  level: INFO
+  log_file: logs/diarization.log

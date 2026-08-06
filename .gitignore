@@ -2,6 +2,7 @@
 data/raw/
 data/transcripts/
 data/diarized/
+data/references/
 *.wav
 *.mp4
 
