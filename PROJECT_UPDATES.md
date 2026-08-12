@@ -459,11 +459,15 @@ only source code, configs, and the notebook.
 from Colab, with cell outputs embedded) is now committed too (`b20afcb`) —
 kept alongside the original as a run record rather than merged into it.
 
-As of this check (2026-08-12), uncommitted/untracked from the current
-session: this file and `.gitignore` (adding `data/transcripts_combined.txt`
-as a new ignore entry — an ad-hoc local artifact, see "Dev environment
-switch" above), plus a new untracked `notebooks/colab_diarization.ipynb`
-(see "What's built — Phase 4" above) — not yet committed.
+This session's changes (this file, `.gitignore`'s
+`data/transcripts_combined.txt` entry, and `notebooks/colab_diarization.ipynb`
+— see "What's built — Phase 4" above) are committed and pushed as `54c4f54`,
+merged with 2 commits this laptop hadn't pulled yet (`ac5f196` PDF export of
+the Phase 3 eval report, `e48bbcd` adds `src/transcription/export_text.py` —
+a per-file plain-text transcript exporter to `data/transcripts_txt/<id>.txt`,
+complementary to but distinct from this session's single-file
+`data/transcripts_combined.txt`) via merge commit `f0442d0`. Working tree is
+clean, `origin/main` is up to date as of this push.
 
 **Branch rename (2026-08-01)**: the GitHub repo
 (`DAG-21/PureBillion-Cloner`) had two unrelated branches — `main`
