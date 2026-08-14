@@ -1,11 +1,10 @@
 # Project Updates
 
 > Living status doc. Read this first when resuming work in a new session.
-> Last updated: 2026-08-12 (corrected stale Phase 4 status — diarization was
-> already scaffolded and verified on 2026-08-06 but this doc never said so;
-> confirmed via a fresh dry-run that all 199 files are ready for the real
-> batch run; wrote `notebooks/colab_diarization.ipynb` to actually run it —
-> not yet executed)
+> Last updated: 2026-08-13 (**Phase 4 diarization full batch run complete**
+> — all 199 files diarized on the T1000, 199/199 succeeded, 0 failed. Ran
+> locally on the T1000, not via the Colab notebook that was planned in the
+> previous update — see "Phase 4 batch run" section below for the full story)
 
 ## What this project is
 
@@ -33,13 +32,13 @@ Full pipeline (11 stages, `src/<stage>/`):
 
 Evaluation (BERTScore, ROUGE, BLEU, RAGAS) lives in `eval/`.
 
-## Current status: Phase 1–3 done. Phase 4 (diarization) is code-complete and verified on 1 file; the full 199-file batch run is the next real step.
+## Current status: Phase 1–4 done. `data/diarized/` has all 199 files. Phase 5 (cleaning) is the next real step.
 
 Stages 5–11 are still empty scaffold stubs (`src/<stage>/*.py` are ~6-line
 placeholder files). Stage 4 (diarization) is **not** a stub — it was fully
 scaffolded and verified end-to-end on a real file back on 2026-08-06
-(commit `9607e5b`), but this file was never updated to say so until now
-(2026-08-12). See "What's built — Phase 4" below. Real work so far is in
+(commit `9607e5b`), and the full 199-file batch completed on 2026-08-13 (see
+"Phase 4 batch run" section below). Real work so far is in
 `src/acquisition/`, `src/audio/`, `src/transcription/`, and `src/diarization/`.
 
 All 199 audio files in `data/raw/audio/` now have a matching transcript in
@@ -282,7 +281,72 @@ gitignored, so it never traveled anywhere).
   cell — Phase 3's notebook skipped this on its full-run cell and lost the
   history CSV to the ephemeral Colab VM disk on disconnect (harmless there
   since file-existence is also checked, but no reason to repeat it here).
-  **Not yet run** — next session should open it in Colab and work through it.
+  **Superseded by the local T1000 run below** — the Colab notebook itself
+  still hasn't been executed, but it's no longer needed for this batch.
+
+### Phase 4 batch run (2026-08-13, on the T1000, not Colab)
+
+User was on the T1000 machine directly and asked to just run the batch
+there instead of going through the not-yet-executed Colab notebook. `torch`
++ `pyannote.audio` were already installed on this machine from the
+2026-08-06 single-file verification. Steps taken this session:
+
+- **`HF_TOKEN`**: `.env` already had a (different, presumably older/invalid
+  or untested) token in it from before. User supplied a new token in plain
+  chat text — swapped it in. **Security note**: since it was pasted in
+  plaintext, treat it as exposed; worth rotating on huggingface.co if that
+  matters going forward.
+- **`ffmpeg` was not on PATH on this machine at all** (not even from the
+  Phase 2/3 work — apparently never actually needed until now, or was lost
+  between sessions). Installed via `winget install --id Gyan.FFmpeg -e
+  --scope user` — user-scope install, no admin/UAC needed, consistent with
+  how Python itself had to be installed on this machine (see 2026-08-04 log
+  below). Lands under
+  `%LOCALAPPDATA%\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-9.0-full_build\bin`
+  — winget adds this to the **user** `PATH` registry value automatically, so
+  new shells pick it up for free, but any shell already open at install time
+  needs it prepended manually (same class of gotcha as the cuBLAS/cuDNN
+  `PATH` fix from Phase 3).
+- **Dry run**: confirmed clean — `would_diarize=199, missing_transcript=0`.
+- **Benchmarked real throughput before committing to the full batch**: a
+  single very short (45s) file misleadingly suggested a bad RTF because most
+  of its wall time was one-time Python/torch/pyannote import + pipeline-load
+  overhead, not actual per-file work. Isolating steady-state time (2 files
+  in one process, looking at the gap between file 1 and file 2 completion)
+  and then re-checking against a file at the corpus's actual median length
+  (~7 min) gave **RTF ≈ 0.08** (~12x real-time) — a much more trustworthy
+  number for extrapolating the full-corpus estimate than either the naive
+  cold-start number or tqdm's own early-batch ETA (which is noisy in the
+  first few files since per-file time varies a lot with video length —
+  corpus durations range from under a minute to ~117 minutes).
+- **Full batch run**: `python -m src.diarization.diarize --device cuda`,
+  backgrounded, progress tracked live via a log-tailing monitor (tqdm
+  progress bar writes `\r`-terminated updates, converted to `\n` to get one
+  event per file). Ran 13:07:08 → 16:07:24 (3h 0m wall clock, close to the
+  ~2.9h RTF-based estimate). **Result: 199/199 succeeded, 0 failed, 0
+  skipped.**
+- **Sanity-checked the full output set** (not just the single verified file
+  from 2026-08-06): all 199 `data/diarized/*.json` files have non-empty
+  `target_speaker_text`; target-speaker label distribution across the corpus
+  is `SPEAKER_00`: 126, `SPEAKER_01`: 63, `SPEAKER_02`: 8, `SPEAKER_03`: 1,
+  `SPEAKER_04`: 1 (label numbering is per-file/arbitrary, not a stable
+  identity across files — this is not evidence of only 5 unique real
+  speakers). No file has the identified target speaker at under 15% of that
+  file's total speaking time, which is what a likely `longest_total_duration`
+  misidentification (e.g. an interviewer/host talking more than Sadhguru)
+  would look like — no evidence of that happening in this batch, so the v1
+  target-speaker heuristic held up across the full real corpus, not just the
+  one file it was originally verified on.
+- **Not re-verified this session**: transcript-level *content* quality of
+  the isolated target-speaker text (i.e. whether the isolated segments are
+  actually clean, coherent Sadhguru speech) — the sanity check above is
+  structural (non-empty, dominant speaker share), not a content/quality
+  read. Worth a manual spot-check of a few files before stage 5 (cleaning)
+  builds on top of this output.
+- `data/diarized/diarization_history.csv` now has all 199 rows (this run,
+  not carried over from the single 2026-08-06 file, which no longer exists
+  on this machine/output dir — see the 2026-08-12 note above about it being
+  gitignored and machine-local).
 
 ### GPU machine session log (2026-08-04)
 
@@ -526,9 +590,12 @@ anywhere — confirm before assuming availability on a new/different machine.
   per explicit user instruction
 - No transcript/caption fetching — Phase 1 is video+metadata only
 - Stages 5–11 (cleaning through serving) are unimplemented stubs. Phase 4
-  (diarization) is code-complete and verified on 1 file (see "What's built —
-  Phase 4" above) — the full 199-file batch run is what's actually left.
-- No `.env` filled in yet (only `.env.example` exists)
+  (diarization) is now fully done — see "Phase 4 batch run" above —
+  `data/diarized/` has all 199 files. Stage 5 (cleaning) is the next
+  unimplemented stub to build.
+- `.env` now has a real `HF_TOKEN` filled in (see "Phase 4 batch run"
+  above); other keys (Qdrant, Langfuse, OpenAI) are still blank, needed
+  later for stages 7/9/10.
 - Target public figure so far is Sadhguru (based on videos downloaded), but
   this hasn't been explicitly confirmed as *the* project target — worth
   double-checking before scaling up acquisition
@@ -538,21 +605,20 @@ anywhere — confirm before assuming availability on a new/different machine.
 
 ## Likely next steps
 
-1. **Run the Phase 4 (diarization) full batch on Colab**: code is done and
-   verified on 1 file, `notebooks/colab_diarization.ipynb` is written (see
-   "What's built — Phase 4" above) but not yet executed. Needs: an HF
-   account with the gated model terms accepted (2 separate model pages, see
-   the notebook's prerequisites), a read-scoped HF access token added as a
-   Colab secret, and `data/transcripts/` (the full 199, not the
-   155-before-the-quota-cut partial set) uploaded to Drive alongside
-   `data/raw/audio/`. Then: dry run → single-file benchmark → decide if the
-   estimated full-batch time fits one Colab session → full run → sync
-   `data/diarized/` back down.
+1. **Start Phase 5 (cleaning)**: `src/cleaning/` is still an empty stub.
+   Needs to read `data/diarized/<id>.json`'s `target_speaker_text` /
+   `target_speaker_segments` and normalize/clean it into whatever format
+   stage 6 (chunking) expects. Worth a manual spot-check of a handful of
+   `data/diarized/*.json` files' isolated text for content quality first
+   (see "Not re-verified this session" note under "Phase 4 batch run" above)
+   before building stage 5 on top of it.
 2. **Resolve the hardware discrepancy** (see flag near the top): is the
    T1000 (4GB VRAM) the real long-term GPU machine, or is there still a
    separate 128GB RAM / A4000 (16GB VRAM) machine this should run on
-   instead? This materially changes what's feasible for stages 4/7/9/11 —
-   Phase 3 working on the T1000 doesn't mean the heavier later stages will.
+   instead? Phase 4 (diarization) also now runs fine on the T1000 (RTF≈0.08,
+   ~3h for the full 199-file corpus), same pattern as Phase 3 — but stages
+   7/9/11 remain the real open question, especially fine-tuning/serving on
+   only 4GB VRAM.
 3. Run a real ffmpeg extraction against a video that doesn't already have
    audio downloaded separately, to validate Phase 2 end-to-end on real
    (non-scratch) data — currently only verified via a scratch-directory test.
@@ -567,6 +633,10 @@ anywhere — confirm before assuming availability on a new/different machine.
 7. Fix the `--history-file` gap in `notebooks/colab_transcription.ipynb`'s
    full-run cell (see "What's NOT done yet" above) if that notebook gets
    reused — `notebooks/colab_diarization.ipynb` already does this correctly.
+8. `notebooks/colab_diarization.ipynb` was written but never actually
+   executed — the batch ended up running locally on the T1000 instead (see
+   "Phase 4 batch run" above). Leave it as-is for now (still useful if a
+   future stage needs Colab), but it's untested.
 
 ---
 *Update this file whenever a phase is completed, the architecture changes,
