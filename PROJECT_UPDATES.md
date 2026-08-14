@@ -1,10 +1,12 @@
 # Project Updates
 
 > Living status doc. Read this first when resuming work in a new session.
-> Last updated: 2026-08-13 (**Phase 4 diarization full batch run complete**
-> — all 199 files diarized on the T1000, 199/199 succeeded, 0 failed. Ran
-> locally on the T1000, not via the Colab notebook that was planned in the
-> previous update — see "Phase 4 batch run" section below for the full story)
+> Last updated: 2026-08-14 (added a reference-free Phase 4 diarization
+> quality evaluation — 199/199 files audited, zero real-problem flags; also
+> added a Google Drive sync script and a Sadhguru topic+text export utility.
+> See "Phase 4 quality evaluation", "Google Drive sync", and "Target-speaker
+> text export" sections below. User was away from the machine during this
+> session and pre-authorized autonomous execution of all of it.)
 
 ## What this project is
 
@@ -32,7 +34,7 @@ Full pipeline (11 stages, `src/<stage>/`):
 
 Evaluation (BERTScore, ROUGE, BLEU, RAGAS) lives in `eval/`.
 
-## Current status: Phase 1–4 done. `data/diarized/` has all 199 files. Phase 5 (cleaning) is the next real step.
+## Current status: Phase 1–4 done and quality-audited (199/199 files, zero real-problem flags). Phase 5 (cleaning) is the next real step.
 
 Stages 5–11 are still empty scaffold stubs (`src/<stage>/*.py` are ~6-line
 placeholder files). Stage 4 (diarization) is **not** a stub — it was fully
@@ -348,6 +350,103 @@ there instead of going through the not-yet-executed Colab notebook. `torch`
   on this machine/output dir — see the 2026-08-12 note above about it being
   gitignored and machine-local).
 
+### Target-speaker text export (2026-08-14)
+
+Added `src/diarization/export_target_text.py` — an ad-hoc utility (not a
+pipeline stage) that combines every file's isolated `target_speaker_text`
+with a topic line into one plain-text deliverable, for handing the corpus
+to someone outside the pipeline (user's manager). Topic comes from the real
+YouTube title, looked up per `video_id` via `yt-dlp` (metadata-only, no
+download) since `data/raw/metadata/` never got copied to this machine (see
+hardware/data-transfer notes above — only `data/raw/audio/` was manually
+moved here). Falls back to a topic derived from the first sentence of the
+isolated speech itself if a title lookup ever fails (deleted/private video,
+network issue) — in practice this run needed **0** fallbacks, all 199
+titles fetched successfully. Title lookups are cached to
+`data/video_title_cache.json` so a rerun doesn't re-hit YouTube for videos
+already resolved.
+
+Output: `data/sadhguru_topics_and_text.txt` (1.3MB, 199 `Topic:`/`Text:`
+blocks, divider-separated) — both this and the cache file are gitignored
+(added to `.gitignore`), matching how the rest of `data/` is treated; only
+the script itself is tracked.
+
+**Caveat carried forward**: this is raw, unedited spoken text straight out
+of diarization (filler words, false starts, ASR artifacts) — Phase 5
+(cleaning) hasn't run yet, so this isn't polished prose.
+
+### Google Drive sync (2026-08-14)
+
+User switches between this T1000 machine and Colab for different stages,
+and `data/` is entirely gitignored (never travels via git) — previously
+this meant manual zip transfers (see "Phase 3 completion" above). Added
+`scripts/sync_to_drive.py` to automate this via `rclone`, uploading to
+`gdrive:persona-clone/data/...`, matching the folder layout the Colab
+notebooks already expect (`DRIVE_AUDIO_DIR` etc. in
+`notebooks/colab_diarization.ipynb`).
+
+**Safety default**: the script uses `rclone copy` (upload/update only),
+never `rclone sync` (mirror + delete), because different machines hold
+different subsets of `data/` at any given time (e.g. this machine has no
+`data/raw/metadata/`) — a mirroring sync from any single machine could wipe
+out files on Drive that only exist on a different machine. `--mirror` is
+available as an explicit opt-in with a loud warning, for when a machine's
+local copy is deliberately meant to become the source of truth.
+
+**Setup done this session**:
+- Installed `rclone` via `winget install --id Rclone.Rclone -e --scope
+  user` (portable, no admin needed — same pattern as the ffmpeg install
+  above).
+- One-time Google OAuth: this genuinely required the user's own browser
+  login/consent click (an assistant cannot complete someone else's Google
+  login) — user completed this once, `rclone config create gdrive drive
+  scope=drive` then captured the resulting token into
+  `%APPDATA%\rclone\rclone.conf` (machine-local, not in the repo).
+- rclone flagged that its shared `client_id` is being retired sometime in
+  2026 (https://rclone.org/drive/#making-your-own-client-id) — not urgent,
+  but worth creating a dedicated client_id before then to avoid an
+  interruption.
+
+**First real sync run**: uploaded `data/raw/audio/` (199 files, 1.7GB),
+`data/transcripts/` (46MB), `data/diarized/` (8MB), and the two export
+files from the section above to `gdrive:persona-clone/data/...`. Verified
+via `rclone size` afterward: 199 objects / 1.658 GiB under
+`persona-clone/data/raw/audio`, 200 objects (199 JSON + history CSV) under
+`persona-clone/data/diarized`. 0 errors.
+
+### Phase 4 quality evaluation (2026-08-14)
+
+Added a reference-free quality audit for the diarization output, mirroring
+the existing Phase 3 pattern (`src/transcription/quality.py` +
+`evaluate.py`): `src/diarization/quality.py` (metrics) +
+`src/diarization/evaluate.py` (CLI). There's no ground-truth speaker-labeled
+reference for this corpus, so the standard diarization accuracy metric
+(DER) isn't computable — same situation Phase 3 was in for WER before the
+`eval/asr/` reference-fetching work. Instead this checks structural signals
+already in each `data/diarized/<id>.json`: speaker count, target-speaker
+time share, turn fragmentation, isolated-text word count vs. the matching
+Phase 3 transcript's word count (retention ratio), speech rate plausibility,
+and an n-gram repetition check.
+
+**Run across all 199 files. Result: zero files triggered any of the six
+"likely-a-real-problem" flags** (`low_target_speaker_share`,
+`many_speakers_detected`, `fragmented_turns`, `implausibly_slow`/
+`implausibly_fast` speech rate, `low_text_retention`,
+`possible_repetition_artifact`). The only flag that fired at all was
+`single_speaker_detected` (93/199 files, purely informational) — checked
+the underlying numbers and this does not indicate a defect: those files'
+single detected speaker only covers ~42-90% of the file's duration (not
+100%), consistent with genuine silence/non-speech gaps rather than a missed
+second speaker, and none of them also tripped a real-problem flag. Full
+writeup in `eval/results/diarization_quality_summary.md`, full per-file
+data in `eval/results/diarization_quality_report.json`.
+
+**What this does NOT verify** (same caveat as before, still open): actual
+content coherence of the isolated text, and whether the
+`longest_total_duration` target-speaker heuristic ever mis-picked in a
+near-50/50 case. Both would need a manual listen/read spot-check, not just
+structural metrics.
+
 ### GPU machine session log (2026-08-04)
 
 Repo was cloned onto a Windows 11 machine with an **NVIDIA T1000 (4GB
@@ -602,16 +701,24 @@ anywhere — confirm before assuming availability on a new/different machine.
 - `notebooks/colab_transcription.ipynb`'s full-run cell doesn't pass
   `--history-file` (unlike its benchmark cell) — see "Known gap" note in
   Phase 3 completion above.
+- The Phase 4 quality evaluation (see "Phase 4 quality evaluation" above)
+  is structural/reference-free only — actual content coherence of the
+  isolated text, and whether the target-speaker heuristic ever mis-picked
+  in a near-50/50 case, still haven't been manually verified.
+- rclone's Google Drive connection (see "Google Drive sync" above) is using
+  rclone's shared client_id, which is being retired sometime in 2026 — no
+  dedicated client_id set up yet.
 
 ## Likely next steps
 
 1. **Start Phase 5 (cleaning)**: `src/cleaning/` is still an empty stub.
    Needs to read `data/diarized/<id>.json`'s `target_speaker_text` /
    `target_speaker_segments` and normalize/clean it into whatever format
-   stage 6 (chunking) expects. Worth a manual spot-check of a handful of
-   `data/diarized/*.json` files' isolated text for content quality first
-   (see "Not re-verified this session" note under "Phase 4 batch run" above)
-   before building stage 5 on top of it.
+   stage 6 (chunking) expects. The Phase 4 quality evaluation (structural,
+   reference-free) came back clean across all 199 files, but a manual
+   spot-check of a handful of files' isolated text for actual content
+   coherence still hasn't been done — worth doing before or shortly after
+   starting stage 5.
 2. **Resolve the hardware discrepancy** (see flag near the top): is the
    T1000 (4GB VRAM) the real long-term GPU machine, or is there still a
    separate 128GB RAM / A4000 (16GB VRAM) machine this should run on
