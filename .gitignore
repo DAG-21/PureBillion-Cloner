@@ -4,6 +4,7 @@ data/transcripts/
 data/transcripts_combined.txt
 data/transcripts_txt/
 data/diarized/
+data/cleaned/
 data/references/
 data/sadhguru_topics_and_text.txt
 data/video_title_cache.json

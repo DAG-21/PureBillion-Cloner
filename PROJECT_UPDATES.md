@@ -1,12 +1,8 @@
 # Project Updates
 
 > Living status doc. Read this first when resuming work in a new session.
-> Last updated: 2026-08-14 (added a reference-free Phase 4 diarization
-> quality evaluation — 199/199 files audited, zero real-problem flags; also
-> added a Google Drive sync script and a Sadhguru topic+text export utility.
-> See "Phase 4 quality evaluation", "Google Drive sync", and "Target-speaker
-> text export" sections below. User was away from the machine during this
-> session and pre-authorized autonomous execution of all of it.)
+> Last updated: 2026-09-07 (built and ran Phase 5 (cleaning) —
+> `src/cleaning/`. See "Phase 5 (cleaning)" section below.)
 
 ## What this project is
 
@@ -34,14 +30,16 @@ Full pipeline (11 stages, `src/<stage>/`):
 
 Evaluation (BERTScore, ROUGE, BLEU, RAGAS) lives in `eval/`.
 
-## Current status: Phase 1–4 done and quality-audited (199/199 files, zero real-problem flags). Phase 5 (cleaning) is the next real step.
+## Current status: Phase 1–5 done. Phase 6 (chunking) is the next real step.
 
-Stages 5–11 are still empty scaffold stubs (`src/<stage>/*.py` are ~6-line
-placeholder files). Stage 4 (diarization) is **not** a stub — it was fully
-scaffolded and verified end-to-end on a real file back on 2026-08-06
-(commit `9607e5b`), and the full 199-file batch completed on 2026-08-13 (see
-"Phase 4 batch run" section below). Real work so far is in
-`src/acquisition/`, `src/audio/`, `src/transcription/`, and `src/diarization/`.
+Stages 6–11 are still empty scaffold stubs (`src/<stage>/*.py` are ~6-line
+placeholder files). Stages 4 (diarization) and 5 (cleaning) are **not**
+stubs — stage 4 was fully scaffolded and verified end-to-end on a real file
+back on 2026-08-06 (commit `9607e5b`), and the full 199-file batch completed
+on 2026-08-13 (see "Phase 4 batch run" section below). Stage 5 was built and
+run against the full corpus on 2026-09-07 (see "Phase 5 (cleaning)" below).
+Real work so far is in `src/acquisition/`, `src/audio/`,
+`src/transcription/`, `src/diarization/`, and `src/cleaning/`.
 
 All 199 audio files in `data/raw/audio/` now have a matching transcript in
 `data/transcripts/` (verified 2026-08-06) — see "Phase 3 completion" below
@@ -447,6 +445,81 @@ content coherence of the isolated text, and whether the
 near-50/50 case. Both would need a manual listen/read spot-check, not just
 structural metrics.
 
+### Phase 5 (cleaning) — built and run 2026-09-07
+
+**Design decision**: the user explicitly confirmed `data/sadhguru_topics_and_text.txt`
+(the single combined export file from "Target-speaker text export" above) as
+the correct, final source to build this stage on — not the per-file
+`data/diarized/<id>.json` outputs the stage was originally scoped against
+(`src/cleaning/clean.py`'s original stub docstring said `Input: data/diarized/*.json`).
+This is a real architecture change, not just an implementation detail: it
+means Phase 5 (and everything downstream) consumes one flat 199-entry
+Topic/Text file instead of 199 per-video JSON files with full segment/
+timestamp detail. Asked the user to clarify scope before building (three
+plausible readings: rebuild Phase 5 around this file, one-off polish the
+file directly, or skip straight to Phase 8 dataset generation from it) —
+confirmed: build Phase 5 around it.
+
+**What's built**: `src/cleaning/` — `cleaner.py` (`Cleaner` engine +
+`parse_export_file`/`clean_text`/`recover_video_ids`), `clean.py` (CLI),
+`config.py` (`configs/cleaning.yaml` → `CleaningConfig`), `logging_setup.py`
+— same file-map convention as Phases 3/4.
+
+CLI: `python -m src.cleaning.clean [options]`
+
+- Parses `data/sadhguru_topics_and_text.txt`'s 199 `Topic:`/`Text:` blocks
+  (divider-separated) into per-video entries.
+- **video_id recovery is best-effort**: the export file itself has no id
+  field, only topic+text. Recovered by re-sorting `data/diarized/*.json`
+  the same way `export_target_text.py` originally did
+  (`sorted(diarized_dir.glob("*.json"))`) and zipping by position — this
+  only works because entry order in the export file is deterministic and
+  matches that sort order. If the diarized-file count and entry count ever
+  disagree, recovery is abandoned entirely (every entry gets `video_id: null`)
+  rather than risk silently mis-mapping ids to the wrong video.
+- **Cleaning applied** (mechanical only, in `clean_text`): strips the 3
+  stray Unicode replacement characters (`�`) found in the corpus (an
+  unrecoverable lossy re-encoding of some original punctuation, negligible
+  at 3 occurrences across 199 files); removes space-before-punctuation
+  artifacts from segment joins (`word . Next` → `word. Next` — 198
+  occurrences of space-before-period alone, the single most common defect
+  found); adds a missing space after sentence punctuation when absent;
+  collapses whitespace; strips standalone ASR disfluency tokens (`um`,
+  `uh`, `erm`, `uhh`, `umm` — configurable list in `configs/cleaning.yaml`);
+  sentence-cases (capitalizes after `.`/`!`/`?` and at the start of the
+  text).
+- **Deliberately NOT touched**: Sadhguru's actual verbal tics (`you know` —
+  395 occurrences, `isn't it` — 565, `right?` — 66, `dhani` — 21, `hmm` — 19,
+  counted across the whole corpus pre-cleaning). These are style signal the
+  fine-tuning tier needs to learn, not noise — stripping them would work
+  against the project's actual goal (style/persona cloning, not a polished-
+  prose summary). Also not touched: truncated sentence openings caused by
+  diarization turn-boundary imprecision (e.g. a dropped leading pronoun) —
+  fixing that would need re-processing audio/alignment, not text cleanup,
+  and is out of scope for this stage.
+- Supports `--dry-run`, `--export-file`, `--diarized-dir`, `--output-file`,
+  `--log-level`, `--config` overrides. No skip/resume history file (unlike
+  Phases 1–4) — input is one flat file processed in a single pass, not a
+  per-item batch, so there's nothing meaningful to resume.
+
+Output: `data/cleaned/sadhguru_cleaned.jsonl` (199 lines; gitignored, added
+to `.gitignore`) — one JSON object per video: `id` (zero-padded sequential
+index), `video_id` (recovered, see above), `topic`, `text` (cleaned),
+`raw_word_count`, `cleaned_word_count`.
+
+**Run 2026-09-07**: all 199 entries parsed and cleaned successfully; all 199
+`video_id`s recovered (diarized-dir file count matched entry count exactly).
+Word-count retention ratio (cleaned/raw) ranged **0.985–1.001** across the
+corpus — expected, since cleaning only drops a handful of disfluency tokens
+per file and otherwise reflows whitespace/punctuation, it doesn't cut
+content.
+
+**Not yet done**: no automated quality evaluation for this stage (unlike
+Phases 3/4's `quality.py`/`evaluate.py` pattern) — the cleaning rules are
+narrow/mechanical enough that the word-count retention check above was
+judged sufficient for now. Revisit if stage 6 (chunking) surfaces cleaning
+defects this didn't catch.
+
 ### GPU machine session log (2026-08-04)
 
 Repo was cloned onto a Windows 11 machine with an **NVIDIA T1000 (4GB
@@ -688,10 +761,11 @@ anywhere — confirm before assuming availability on a new/different machine.
 - Test suite is stale/broken (see above) — not being maintained right now
   per explicit user instruction
 - No transcript/caption fetching — Phase 1 is video+metadata only
-- Stages 5–11 (cleaning through serving) are unimplemented stubs. Phase 4
-  (diarization) is now fully done — see "Phase 4 batch run" above —
-  `data/diarized/` has all 199 files. Stage 5 (cleaning) is the next
-  unimplemented stub to build.
+- Stages 6–11 (chunking through serving) are unimplemented stubs. Phases 4
+  (diarization) and 5 (cleaning) are now fully done — see "Phase 4 batch
+  run" and "Phase 5 (cleaning)" above — `data/diarized/` has all 199 files
+  and `data/cleaned/sadhguru_cleaned.jsonl` has all 199 cleaned entries.
+  Stage 6 (chunking) is the next unimplemented stub to build.
 - `.env` now has a real `HF_TOKEN` filled in (see "Phase 4 batch run"
   above); other keys (Qdrant, Langfuse, OpenAI) are still blank, needed
   later for stages 7/9/10.
@@ -711,14 +785,14 @@ anywhere — confirm before assuming availability on a new/different machine.
 
 ## Likely next steps
 
-1. **Start Phase 5 (cleaning)**: `src/cleaning/` is still an empty stub.
-   Needs to read `data/diarized/<id>.json`'s `target_speaker_text` /
-   `target_speaker_segments` and normalize/clean it into whatever format
-   stage 6 (chunking) expects. The Phase 4 quality evaluation (structural,
-   reference-free) came back clean across all 199 files, but a manual
-   spot-check of a handful of files' isolated text for actual content
-   coherence still hasn't been done — worth doing before or shortly after
-   starting stage 5.
+1. **Start Phase 6 (chunking)**: `src/chunking/` is still an empty stub.
+   Needs to read `data/cleaned/sadhguru_cleaned.jsonl`'s `text` field (per
+   video, with `video_id`/`topic` available as metadata to carry through)
+   and split it into semantic chunks via LlamaIndex for stage 7
+   (embeddings). The Phase 4 quality evaluation (structural, reference-free)
+   came back clean across all 199 files, but a manual spot-check of a
+   handful of files' isolated text for actual content coherence still
+   hasn't been done — worth doing before or shortly after starting stage 6.
 2. **Resolve the hardware discrepancy** (see flag near the top): is the
    T1000 (4GB VRAM) the real long-term GPU machine, or is there still a
    separate 128GB RAM / A4000 (16GB VRAM) machine this should run on

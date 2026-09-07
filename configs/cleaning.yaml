@@ -1,2 +1,31 @@
-# Configuration for src/cleaning/
-# TODO: define stage-specific parameters
+# Configuration for src/cleaning/ (Phase 5: Cleaning)
+#
+# All relative paths are resolved against the project root
+# (the directory containing this configs/ folder).
+#
+# Input is the single combined export file (data/sadhguru_topics_and_text.txt,
+# produced by src/diarization/export_target_text.py), not the per-file
+# data/diarized/<id>.json outputs the stage was originally scoped against --
+# the user confirmed this combined file as the correct source to build on
+# (2026-09-07). diarized_dir below is used only for best-effort video_id
+# recovery (see cleaner.py) since the export file itself has no id field.
+
+input:
+  export_file: data/sadhguru_topics_and_text.txt
+  diarized_dir: data/diarized   # best-effort video_id recovery only; not read for text
+
+output:
+  cleaned_file: data/cleaned/sadhguru_cleaned.jsonl
+
+cleaning:
+  # Standalone ASR disfluency tokens to drop outright (word-boundary matched,
+  # case-insensitive). Deliberately does NOT include Sadhguru's actual verbal
+  # tics ("you know", "isn't it", "right?", "dhani") -- those are style
+  # signal for the fine-tuning tier, not noise, and stripping them would
+  # hurt persona fidelity.
+  disfluencies: [um, uh, erm, uhh, umm]
+  sentence_case: true   # capitalize first letter of the text and after each ./!/?
+
+logging:
+  level: INFO
+  log_file: logs/cleaning.log
