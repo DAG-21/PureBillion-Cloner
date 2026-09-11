@@ -1,8 +1,9 @@
 # Project Updates
 
 > Living status doc. Read this first when resuming work in a new session.
-> Last updated: 2026-09-07 (built and ran Phase 5 (cleaning) —
-> `src/cleaning/`. See "Phase 5 (cleaning)" section below.)
+> Last updated: 2026-09-11 (built and ran Phase 5-b (genre classification)
+> — `src/genre_classification/`. See "Phase 5-b (genre classification)"
+> section below.)
 
 ## What this project is
 
@@ -30,16 +31,18 @@ Full pipeline (11 stages, `src/<stage>/`):
 
 Evaluation (BERTScore, ROUGE, BLEU, RAGAS) lives in `eval/`.
 
-## Current status: Phase 1–5 done. Phase 6 (chunking) is the next real step.
+## Current status: Phase 1–6 done. Phase 7 (embeddings) is the next real step.
 
-Stages 6–11 are still empty scaffold stubs (`src/<stage>/*.py` are ~6-line
-placeholder files). Stages 4 (diarization) and 5 (cleaning) are **not**
-stubs — stage 4 was fully scaffolded and verified end-to-end on a real file
-back on 2026-08-06 (commit `9607e5b`), and the full 199-file batch completed
-on 2026-08-13 (see "Phase 4 batch run" section below). Stage 5 was built and
-run against the full corpus on 2026-09-07 (see "Phase 5 (cleaning)" below).
-Real work so far is in `src/acquisition/`, `src/audio/`,
-`src/transcription/`, `src/diarization/`, and `src/cleaning/`.
+Stages 7–11 are still empty scaffold stubs (`src/<stage>/*.py` are ~6-line
+placeholder files). Stages 4 (diarization), 5 (cleaning), and 6 (chunking)
+are **not** stubs — stage 4 was fully scaffolded and verified end-to-end on
+a real file back on 2026-08-06 (commit `9607e5b`), and the full 199-file
+batch completed on 2026-08-13 (see "Phase 4 batch run" section below).
+Stage 5 was built and run against the full corpus on 2026-09-07 (see
+"Phase 5 (cleaning)" below). Stage 6 was built and run against the full
+corpus on 2026-09-08 (see "Phase 6 (chunking)" below). Real work so far is
+in `src/acquisition/`, `src/audio/`, `src/transcription/`,
+`src/diarization/`, `src/cleaning/`, and `src/chunking/`.
 
 All 199 audio files in `data/raw/audio/` now have a matching transcript in
 `data/transcripts/` (verified 2026-08-06) — see "Phase 3 completion" below
@@ -520,6 +523,146 @@ narrow/mechanical enough that the word-count retention check above was
 judged sufficient for now. Revisit if stage 6 (chunking) surfaces cleaning
 defects this didn't catch.
 
+### Phase 6 (chunking) — built and run 2026-09-08
+
+**What's built**: `src/chunking/` — `chunker.py` (`Chunker` engine +
+`load_cleaned_entries`), `chunk.py` (CLI), `config.py` (`configs/chunking.yaml`
+→ `ChunkingConfig`), `logging_setup.py` — same file-map convention as
+Phases 3–5.
+
+CLI: `python -m src.chunking.chunk [options]`
+
+- Reads Phase 5's `data/cleaned/sadhguru_cleaned.jsonl` (199 lines, one JSON
+  object per video: `id`, `video_id`, `topic`, `text`, word counts).
+- Splits each video's cleaned `text` **independently** into overlapping
+  chunks via LlamaIndex's `SentenceSplitter` (sentence/paragraph-aware,
+  token-counted via `tiktoken`) — chunks never span two videos, so
+  `video_id`/`topic` metadata stays correctly attached to the text it
+  actually describes.
+- Only `llama-index-core` was installed (not the full `llama-index`
+  metapackage in `requirements.txt`, which pulls in many unrelated
+  integrations/extras) — `Document` + `SentenceSplitter` are both in
+  `llama_index.core`, nothing else was needed. Unlike the heavy
+  GPU-stage deps (torch/pyannote/faster-whisper), this installed cleanly on
+  the CPU dev machine with no issues, so no "scaffold here, install
+  elsewhere" split was needed for this stage.
+- The `SentenceSplitter` is constructed **lazily** (same convention as the
+  Whisper/pyannote model loads in Phases 3–4) — `--dry-run` never
+  constructs it, so it works even before `llama-index-core` is installed.
+- Per-chunk output fields: `chunk_id` (`<source_id>-<chunk_index:03d>`,
+  e.g. `0000-000`), `source_id` (the video's Phase 5 `id`), `video_id`,
+  `topic`, `chunk_index` (position within that video, 0-based), `text`,
+  `word_count`.
+- Skips (with a warning, counted as `skipped_empty`) any video whose cleaned
+  text is empty — none occurred in this run.
+- Supports `--dry-run`, `--cleaned-file`, `--output-file`, `--chunk-size`,
+  `--chunk-overlap`, `--log-level`, `--config` overrides. No skip/resume
+  history file (same reasoning as Phase 5 — one flat input file processed
+  in a single pass, not a per-item batch).
+
+**Config** (`configs/chunking.yaml`): `chunk_size: 512` (max tokens per
+chunk), `chunk_overlap: 64` (token overlap between consecutive chunks of the
+same video) — reasonable defaults for a BGE-M3-style embedding model in
+stage 7, not yet tuned against actual retrieval quality.
+
+Output: `data/chunks/sadhguru_chunks.jsonl` (gitignored, added to
+`.gitignore`).
+
+**Run 2026-09-08**: all 199 videos chunked successfully, 0 skipped-empty →
+**744 total chunks**. Word-count-per-chunk ranged 42–492 (avg ~340), all
+comfortably under the 512-token budget after LlamaIndex's actual
+sentence-aware splitting. Verified: every chunk's `video_id`/`topic`
+correctly matches its source video, `chunk_index` is contiguous
+(0..N-1) per video, no chunk has a null `video_id` (all 199 source video_ids
+were already recovered in Phase 5).
+
+**Not yet done**: no automated quality evaluation for this stage (same
+"mechanical enough, skip for now" judgment call as Phase 5) — no tuning of
+`chunk_size`/`chunk_overlap` against actual retrieval performance, since
+that can't be meaningfully evaluated until stage 7 (embeddings) and stage 10
+(RAG retrieval) exist. Revisit chunk-size tuning once retrieval eval is
+possible.
+
+### Phase 5-b (genre classification) — built and run 2026-09-11
+
+**What this is**: not one of the original 11 pipeline stages -- added at the
+user's request as an in-between step after Phase 5 (cleaning) and before
+Phase 6 (chunking) to answer "how many distinct subject matters are really
+in this corpus" and tag every entry with a broad `genre` for later use
+(e.g. genre-aware retrieval filters or balanced dataset_gen sampling).
+
+**Classification method -- deliberately not an algorithm or an API call**:
+discussed three alternatives with the user (unsupervised clustering via
+TF-IDF + KMeans with silhouette-based k selection; a runtime Anthropic API
+classifier; direct classification by the assistant itself) and picked
+direct classification. Rationale: since the corpus is a fixed, one-time set
+of 199 topics, direct semantic reading gives materially better grouping
+than TF-IDF+KMeans (which only sees word overlap -- e.g. it would likely
+fail to group "Overcome Anxiety" with "Why Am I Stressed?" since they share
+no words), at the same quality as an API-based LLM classifier but without
+needing `ANTHROPIC_API_KEY` configured (still blank) or paying per-run API
+cost for data that isn't changing. The tradeoff: the resulting mapping is
+static, not dynamically reusable -- if Phase 5's export file is ever
+rerun against a different/larger source, the id->genre mapping needs to be
+re-derived by the same direct-classification process for the new ids.
+
+**What's built**: `src/genre_classification/` -- `genres.py` (the static
+8-genre taxonomy + `GENRE_BY_ID` mapping for all 199 ids, with rationale in
+its docstring), `classifier.py` (`classify_all` engine), `classify.py`
+(CLI), `config.py` (`configs/genre_classification.yaml` ->
+`GenreClassificationConfig`), `logging_setup.py` -- same file-map convention
+as Phases 3-6.
+
+CLI: `python -m src.genre_classification.classify [options]`
+
+- Reads Phase 5's `data/cleaned/sadhguru_cleaned.jsonl`, looks up each
+  entry's `id` in the static `GENRE_BY_ID` mapping, adds a `genre` field.
+- **Fails loudly** (`KeyError`) if any entry's `id` has no mapping, rather
+  than defaulting to `None`/"Other" -- a silent default would misrepresent
+  the corpus's real genre distribution rather than surface that the mapping
+  needs updating.
+- Writes back to the same file, in place, by default (`output.cleaned_file`
+  == `input.cleaned_file` in `configs/genre_classification.yaml`) -- this
+  stage doesn't produce a new pipeline artifact, it augments Phase 5's
+  existing one.
+- Supports `--dry-run`, `--cleaned-file`, `--output-file`, `--log-level`,
+  `--config` overrides. No skip/resume history file (same reasoning as
+  Phases 5/6 -- one flat file processed in a single pass).
+
+**The 8 genres derived** (from reading all 199 real video titles): **Mind &
+Consciousness** (44 entries -- how the mind/thoughts/memory/consciousness
+work, including the neuroscientist/psychiatrist guest dialogues), **Life
+Philosophy & Existential Inquiry** (36 -- suffering, ignorance, existence,
+morality, death, freedom), **Relationships & Love** (28 -- romantic
+relationships, marriage, dating, breakups), **Personal Growth &
+Self-Mastery** (26 -- confidence, fear, decision-making, focus, money/
+success questions), **Mental Health & Emotional Wellbeing** (22 -- anxiety,
+stress, depression, overthinking), **Mysticism & Occult** (18 -- tantra,
+psychic phenomena, the `Occult & Mysticism` mini-series episodes, chakras),
+**Physical Health & Nutrition** (14 -- diet, food, sleep, posture, fitness),
+**Spiritual Practice & Inner Engineering** (11 -- meditation, yoga
+practices, devotion). Full derivation logic and the per-genre id lists are
+in `src/genre_classification/genres.py`.
+
+**Run 2026-09-11**: all 199/199 entries classified successfully, 0 missing
+ids, 8 distinct genres -- confirmed via `--dry-run` first, then a real run;
+`data/cleaned/sadhguru_cleaned.jsonl`'s 199 lines now each have `id`,
+`topic`, `text`, `raw_word_count`, `cleaned_word_count`, and `genre`.
+
+**Update 2026-09-11 -- `genre` now carried through to chunks**:
+`src/chunking/chunker.py`'s `CleanedEntry`/`Chunk` dataclasses and
+`load_cleaned_entries` were updated to also read/carry `genre` (unchanged
+per-video, since it's whole-video metadata, not something chunk boundaries
+are computed from -- see "Best chunking method" discussion: kept
+`SentenceSplitter`, didn't switch to embedding-based semantic chunking,
+since genre doesn't inform *where* to split within a video and pulling in
+an embedding model this early would front-load Phase 7's dependency for
+unclear benefit on already-short, single-topic video transcripts). Chunking
+was re-run: same 744 chunks as the 2026-09-08 run (chunking logic itself is
+unchanged), now each with a `genre` field. Verified: all 744 chunks have a
+non-empty `genre`, and every chunk's `genre` exactly matches its source
+video's `genre` in `data/cleaned/sadhguru_cleaned.jsonl` (0 mismatches).
+
 ### GPU machine session log (2026-08-04)
 
 Repo was cloned onto a Windows 11 machine with an **NVIDIA T1000 (4GB
@@ -761,11 +904,12 @@ anywhere — confirm before assuming availability on a new/different machine.
 - Test suite is stale/broken (see above) — not being maintained right now
   per explicit user instruction
 - No transcript/caption fetching — Phase 1 is video+metadata only
-- Stages 6–11 (chunking through serving) are unimplemented stubs. Phases 4
-  (diarization) and 5 (cleaning) are now fully done — see "Phase 4 batch
-  run" and "Phase 5 (cleaning)" above — `data/diarized/` has all 199 files
-  and `data/cleaned/sadhguru_cleaned.jsonl` has all 199 cleaned entries.
-  Stage 6 (chunking) is the next unimplemented stub to build.
+- Stages 7–11 (embeddings through serving) are unimplemented stubs. Phases 4
+  (diarization), 5 (cleaning), and 6 (chunking) are now fully done — see
+  "Phase 4 batch run", "Phase 5 (cleaning)", and "Phase 6 (chunking)" above
+  — `data/diarized/` has all 199 files, `data/cleaned/sadhguru_cleaned.jsonl`
+  has all 199 cleaned entries, and `data/chunks/sadhguru_chunks.jsonl` has
+  744 chunks. Stage 7 (embeddings) is the next unimplemented stub to build.
 - `.env` now has a real `HF_TOKEN` filled in (see "Phase 4 batch run"
   above); other keys (Qdrant, Langfuse, OpenAI) are still blank, needed
   later for stages 7/9/10.
@@ -785,14 +929,16 @@ anywhere — confirm before assuming availability on a new/different machine.
 
 ## Likely next steps
 
-1. **Start Phase 6 (chunking)**: `src/chunking/` is still an empty stub.
-   Needs to read `data/cleaned/sadhguru_cleaned.jsonl`'s `text` field (per
-   video, with `video_id`/`topic` available as metadata to carry through)
-   and split it into semantic chunks via LlamaIndex for stage 7
-   (embeddings). The Phase 4 quality evaluation (structural, reference-free)
-   came back clean across all 199 files, but a manual spot-check of a
-   handful of files' isolated text for actual content coherence still
-   hasn't been done — worth doing before or shortly after starting stage 6.
+1. **Start Phase 7 (embeddings)**: `src/embeddings/` is still an empty stub.
+   Needs to read `data/chunks/sadhguru_chunks.jsonl`'s 744 chunks, embed
+   `text` via BGE-M3, and index into Qdrant (carrying `chunk_id`/`video_id`/
+   `topic` through as payload metadata) for stage 10 (RAG retrieval). This
+   is also the first stage that needs Qdrant running somewhere (local
+   Docker, or a hosted instance) — not yet set up. The Phase 4 quality
+   evaluation (structural, reference-free) came back clean across all 199
+   files, but a manual spot-check of a handful of files' isolated text for
+   actual content coherence still hasn't been done — worth doing at some
+   point, independent of which stage is active.
 2. **Resolve the hardware discrepancy** (see flag near the top): is the
    T1000 (4GB VRAM) the real long-term GPU machine, or is there still a
    separate 128GB RAM / A4000 (16GB VRAM) machine this should run on

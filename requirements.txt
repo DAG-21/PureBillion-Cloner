@@ -8,6 +8,7 @@ pyannote.audio
 spacy
 nltk
 llama-index
+huggingface_hub
 qdrant-client
 transformers
 peft
