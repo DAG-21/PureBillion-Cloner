@@ -44,10 +44,6 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         help="Override the input combined export file.",
     )
     parser.add_argument(
-        "--diarized-dir", type=Path, default=None,
-        help="Override the diarized dir used for best-effort video_id recovery.",
-    )
-    parser.add_argument(
         "--output-file", type=Path, default=None,
         help="Override the output cleaned JSONL file.",
     )
@@ -68,8 +64,6 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     if args.export_file is not None:
         config.input.export_file = args.export_file
-    if args.diarized_dir is not None:
-        config.input.diarized_dir = args.diarized_dir
     if args.output_file is not None:
         config.output.cleaned_file = args.output_file
     if args.log_level is not None:
@@ -82,8 +76,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     summary = cleaner.clean_all(dry_run=args.dry_run)
 
     logger.info(
-        "Done. total=%d cleaned=%d would_clean=%d video_ids_recovered=%s",
-        summary.total, summary.cleaned, summary.would_clean, summary.video_ids_recovered,
+        "Done. total=%d cleaned=%d would_clean=%d",
+        summary.total, summary.cleaned, summary.would_clean,
     )
     return 0
 

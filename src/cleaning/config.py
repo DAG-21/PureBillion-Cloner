@@ -19,7 +19,6 @@ DEFAULT_CONFIG_PATH = PROJECT_ROOT / "configs" / "cleaning.yaml"
 @dataclass(slots=True)
 class InputConfig:
     export_file: Path
-    diarized_dir: Path
 
 
 @dataclass(slots=True)
@@ -72,9 +71,6 @@ def load_config(config_path: Union[Path, str] = DEFAULT_CONFIG_PATH) -> Cleaning
     input_cfg = InputConfig(
         export_file=_resolve_path(
             input_raw.get("export_file", "data/sadhguru_topics_and_text.txt")
-        ),  # type: ignore[arg-type]
-        diarized_dir=_resolve_path(
-            input_raw.get("diarized_dir", "data/diarized")
         ),  # type: ignore[arg-type]
     )
     output = OutputConfig(

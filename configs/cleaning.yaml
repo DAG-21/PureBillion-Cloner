@@ -7,12 +7,11 @@
 # produced by src/diarization/export_target_text.py), not the per-file
 # data/diarized/<id>.json outputs the stage was originally scoped against --
 # the user confirmed this combined file as the correct source to build on
-# (2026-09-07). diarized_dir below is used only for best-effort video_id
-# recovery (see cleaner.py) since the export file itself has no id field.
+# (2026-09-07). No video_id tracing is kept -- only topic + cleaned text
+# matter downstream (2026-09-10).
 
 input:
   export_file: data/sadhguru_topics_and_text.txt
-  diarized_dir: data/diarized   # best-effort video_id recovery only; not read for text
 
 output:
   cleaned_file: data/cleaned/sadhguru_cleaned.jsonl

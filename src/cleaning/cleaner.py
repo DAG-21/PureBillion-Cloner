@@ -13,13 +13,6 @@ tier wants to learn, not noise to strip. It also does not attempt to repair
 truncated sentence openings caused by diarization turn-boundary imprecision
 (e.g. a dropped leading pronoun) -- that would require re-processing audio/
 alignment, not text-level cleanup.
-
-video_id recovery is best-effort only: the export file has no id field, so
-ids are recovered by re-sorting ``data/diarized/*.json`` the same way
-``export_target_text.py`` did and zipping by position. If the diarized
-directory's file count doesn't match the number of entries in the export
-file, recovery is abandoned and every entry gets ``video_id: null`` rather
-than risk silently mis-mapping ids.
 """
 from __future__ import annotations
 
@@ -49,7 +42,6 @@ class RawEntry:
 @dataclass(slots=True)
 class CleanedEntry:
     id: str
-    video_id: Optional[str]
     topic: str
     text: str
     raw_word_count: int
@@ -61,7 +53,6 @@ class CleaningSummary:
     total: int
     cleaned: int
     would_clean: int
-    video_ids_recovered: bool
 
 
 def parse_export_file(export_file: Path) -> List[RawEntry]:
@@ -80,28 +71,6 @@ def parse_export_file(export_file: Path) -> List[RawEntry]:
         text = text_line[len("Text: "):]
         entries.append(RawEntry(topic=topic, text=text))
     return entries
-
-
-def recover_video_ids(diarized_dir: Path, n_entries: int) -> Optional[List[str]]:
-    """Best-effort recovery of video_ids by re-sorting data/diarized/*.json.
-
-    Mirrors the sort order export_target_text.py used to build the combined
-    file (``sorted(diarized_dir.glob("*.json"))``). Returns None (recovery
-    abandoned) if the file count doesn't match the entry count, since a
-    mismatch means position-based zipping can no longer be trusted.
-    """
-    if not diarized_dir.exists():
-        logger.warning("diarized_dir %s does not exist; skipping video_id recovery", diarized_dir)
-        return None
-    diarized_files = sorted(diarized_dir.glob("*.json"))
-    if len(diarized_files) != n_entries:
-        logger.warning(
-            "video_id recovery skipped: %d diarized file(s) in %s but %d entries in export file "
-            "-- counts must match to trust position-based mapping",
-            len(diarized_files), diarized_dir, n_entries,
-        )
-        return None
-    return [p.stem for p in diarized_files]
 
 
 def _strip_disfluencies(text: str, disfluencies: List[str]) -> str:
@@ -146,17 +115,13 @@ class Cleaner:
         entries = parse_export_file(export_file)
         logger.info("Parsed %d entries from %s", len(entries), export_file)
 
-        video_ids = recover_video_ids(self.config.input.diarized_dir, len(entries))
-        video_ids_recovered = video_ids is not None
-
         if dry_run:
             logger.info(
-                "[dry-run] would clean %d entries -> %s (video_id recovered: %s)",
-                len(entries), self.config.output.cleaned_file, video_ids_recovered,
+                "[dry-run] would clean %d entries -> %s",
+                len(entries), self.config.output.cleaned_file,
             )
             return CleaningSummary(
                 total=len(entries), cleaned=0, would_clean=len(entries),
-                video_ids_recovered=video_ids_recovered,
             )
 
         cleaned_entries: List[CleanedEntry] = []
@@ -169,7 +134,6 @@ class Cleaner:
             cleaned_entries.append(
                 CleanedEntry(
                     id=f"{i:04d}",
-                    video_id=video_ids[i] if video_ids is not None else None,
                     topic=entry.topic,
                     text=cleaned_text,
                     raw_word_count=len(entry.text.split()),
@@ -186,5 +150,4 @@ class Cleaner:
         logger.info("Wrote %d cleaned entries to %s", len(cleaned_entries), output_file)
         return CleaningSummary(
             total=len(entries), cleaned=len(cleaned_entries), would_clean=0,
-            video_ids_recovered=video_ids_recovered,
         )
