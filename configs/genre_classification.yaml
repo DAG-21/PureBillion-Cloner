@@ -1,0 +1,21 @@
+# Configuration for src/genre_classification/ (Phase 5-b: Genre Classification)
+#
+# All relative paths are resolved against the project root
+# (the directory containing this configs/ folder).
+#
+# Input is data/cleaned/sadhguru_cleaned.jsonl (Phase 5 output): one JSON
+# object per video (id, topic, text, raw_word_count, cleaned_word_count).
+# This stage adds a `genre` field to every entry using the static id ->
+# genre mapping in src/genre_classification/genres.py (see that module's
+# docstring for how the 8-genre taxonomy and the mapping were produced).
+# By default it writes back to the same file, in place.
+
+input:
+  cleaned_file: data/cleaned/sadhguru_cleaned.jsonl
+
+output:
+  cleaned_file: data/cleaned/sadhguru_cleaned.jsonl
+
+logging:
+  level: INFO
+  log_file: logs/genre_classification.log
